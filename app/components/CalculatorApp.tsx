@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { Scale, Sun, Moon } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { PriceCard } from "@/app/components/PriceCard";
@@ -201,10 +202,17 @@ export function CalculatorApp({
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground"
+              className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-border"
               aria-hidden="true"
             >
-              <Scale className="h-5 w-5" />
+              <Image
+                src="/logo.jpg"
+                alt="Logo Tring! Pegadaian"
+                width={40}
+                height={40}
+                priority
+                className="h-full w-full object-contain p-0.5"
+              />
             </div>
             <div>
               <h1 className="text-base font-bold tracking-tight text-foreground sm:text-lg">

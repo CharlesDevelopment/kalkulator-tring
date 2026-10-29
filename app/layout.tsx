@@ -5,6 +5,13 @@ export const metadata: Metadata = {
   title: "Tring! Cuan Analyzer | Kalkulator Cuan Emas Tring! by Pegadaian",
   description:
     "Kalkulator audit harga beli, potongan voucher, biaya admin multi-VA (BCA & Bank Lain), dan buyback emas Tring! by Pegadaian.",
+  icons: {
+    icon: [
+      { url: "/logo.jpg" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [{ url: "/logo.jpg" }],
+  },
 };
 
 export default function RootLayout({
