@@ -5,85 +5,98 @@ import {
 } from "../calculator";
 
 describe("calculatePaymentVaBonus", () => {
-  it("calculates 2x VA BCA + 3x VA Bayar Via Bank Digital as +Rp7.500 profit bonus", () => {
-    const summary = calculatePaymentVaBonus([
-      { id: "1", method: "VA_BCA", label: "VA BCA", frequency: 2 },
-      {
-        id: "2",
-        method: "VA_DIGITAL",
-        label: "Seabank / Bank Digital",
-        frequency: 3,
-      },
-    ]);
+  it("calculates initial service fee (2500/tx) and Bank Digital savings accurately", () => {
+    const summaryYes = calculatePaymentVaBonus(
+      [
+        { id: "1", method: "VA_BCA", frequency: 2 },
+        { id: "2", method: "VA_DIGITAL", frequency: 3 },
+      ],
+      true
+    );
 
-    expect(summary.bcaCount).toBe(2);
-    expect(summary.digitalBankCount).toBe(3);
-    expect(summary.totalTransactions).toBe(5);
-    expect(summary.totalVaBonus).toBe(7500);
-    expect(summary.formulaText).toBe("(2 x Rp0) + (3 x +Rp2.500)");
-  });
+    expect(summaryYes.bcaCount).toBe(2);
+    expect(summaryYes.digitalBankCount).toBe(3);
+    expect(summaryYes.totalTransactions).toBe(5);
+    expect(summaryYes.initialServiceFee).toBe(12500);
+    expect(summaryYes.totalVaBonus).toBe(7500);
+    expect(summaryYes.netServiceEffect).toBe(7500);
 
-  it("handles empty payment rows cleanly", () => {
-    const summary = calculatePaymentVaBonus([]);
-    expect(summary.totalVaBonus).toBe(0);
-    expect(summary.totalTransactions).toBe(0);
+    const summaryNo = calculatePaymentVaBonus(
+      [
+        { id: "1", method: "VA_BCA", frequency: 2 },
+        { id: "2", method: "VA_DIGITAL", frequency: 3 },
+      ],
+      false
+    );
+    // 3x Digital saves 7.500 out of 12.500 initial fee -> net effect -5.000 (from the 2x conventional bank)
+    expect(summaryNo.netServiceEffect).toBe(-5000);
   });
 });
 
 describe("calculateTringCuan", () => {
-  it("calculates total gram, net modal, buyback value, net cuan (+2500 per VA Digital), and ROI accurately in Rupiah mode", () => {
+  it("matches exact user example 1: Beli 25k, Voucher 15k (12.5k + 2.5k fee) -> Tagihan Awal 12.500 -> via Bank Digital transfer 10.000", () => {
     const result = calculateTringCuan({
       inputMode: "rupiah",
-      nominalInput: 2500000,
+      nominalInput: 25000,
       gramInput: 0,
-      voucherDiscount: 125000,
+      voucherDiscount: 15000,
+      voucherCoversServiceFee: true,
       buyPricePerGram: 1545000,
       buybackPricePerGram: 1495000,
-      paymentRows: [
-        { id: "1", method: "VA_BCA", label: "VA BCA", frequency: 2 },
-        {
-          id: "2",
-          method: "VA_DIGITAL",
-          label: "Seabank / Bank Digital",
-          frequency: 3,
-        },
-      ],
+      paymentRows: [{ id: "1", method: "VA_DIGITAL", frequency: 1 }],
     });
 
-    expect(result.isValid).toBe(true);
-    expect(result.modalBeli).toBe(2500000);
-    expect(result.totalGram).toBeCloseTo(2500000 / 1545000, 6);
-    expect(result.vaBonusSummary.totalVaBonus).toBe(7500);
-    // Net Modal berkurang karena voucher (125.000) dan hemat admin VA Bank Digital (7.500)
-    expect(result.netModal).toBe(2500000 - 125000 - 7500); // 2,367,500
-    expect(result.buybackValue).toBe(
-      Math.round((2500000 / 1545000) * 1495000)
-    );
-    expect(result.netProfit).toBe(result.buybackValue - result.netModal);
-    expect(result.isProfitable).toBe(true);
+    expect(result.modalBeli).toBe(25000);
+    expect(result.vaBonusSummary.initialServiceFee).toBe(2500);
+    expect(result.tagihanAwalVa).toBe(12500);
+    expect(result.netModal).toBe(10000);
+    expect(result.voucherFeePortion).toBe(2500);
+    expect(result.voucherGoldPortion).toBe(12500);
   });
 
-  it("calculates accurately in Gram mode and adds +Rp2.500 per VA Digital transaction to profit", () => {
-    const result = calculateTringCuan({
-      inputMode: "gram",
-      nominalInput: 0,
-      gramInput: 1.0,
-      voucherDiscount: 10000,
-      buyPricePerGram: 1550000,
-      buybackPricePerGram: 1500000,
-      paymentRows: [
-        { id: "1", method: "VA_DIGITAL", label: "Seabank", frequency: 2 },
-      ],
+  it("matches exact user example 2: Beli 25k tanpa voucher -> Tagihan Awal 27.500 -> via Bank Digital transfer 25.000, via Bank Konvensional transfer 27.500", () => {
+    const viaDigital = calculateTringCuan({
+      inputMode: "rupiah",
+      nominalInput: 25000,
+      gramInput: 0,
+      voucherDiscount: 0,
+      voucherCoversServiceFee: false,
+      buyPricePerGram: 1545000,
+      buybackPricePerGram: 1495000,
+      paymentRows: [{ id: "1", method: "VA_DIGITAL", frequency: 1 }],
     });
 
-    expect(result.isValid).toBe(true);
-    expect(result.modalBeli).toBe(1550000);
-    expect(result.totalGram).toBe(1.0);
-    // 2x VA Digital = +5.000 cuan (mengurangi netModal sebanyak 5.000)
-    expect(result.netModal).toBe(1550000 - 10000 - 5000); // 1,535,000
-    expect(result.buybackValue).toBe(1500000);
-    expect(result.netProfit).toBe(-35000);
-    expect(result.isProfitable).toBe(false);
-    expect(result.breakEvenVoucher).toBe(45000);
+    expect(viaDigital.tagihanAwalVa).toBe(27500);
+    expect(viaDigital.netModal).toBe(25000);
+
+    const viaConventional = calculateTringCuan({
+      inputMode: "rupiah",
+      nominalInput: 25000,
+      gramInput: 0,
+      voucherDiscount: 0,
+      voucherCoversServiceFee: false,
+      buyPricePerGram: 1545000,
+      buybackPricePerGram: 1495000,
+      paymentRows: [{ id: "1", method: "VA_BCA", frequency: 1 }],
+    });
+
+    expect(viaConventional.tagihanAwalVa).toBe(27500);
+    expect(viaConventional.netModal).toBe(27500);
+  });
+
+  it("matches exact user example 3: Beli 25k, Voucher 10k tidak potong biaya layanan -> Tagihan Awal 17.500 -> via Bank Digital transfer 15.000", () => {
+    const result = calculateTringCuan({
+      inputMode: "rupiah",
+      nominalInput: 25000,
+      gramInput: 0,
+      voucherDiscount: 10000,
+      voucherCoversServiceFee: false,
+      buyPricePerGram: 1545000,
+      buybackPricePerGram: 1495000,
+      paymentRows: [{ id: "1", method: "VA_DIGITAL", frequency: 1 }],
+    });
+
+    expect(result.tagihanAwalVa).toBe(17500);
+    expect(result.netModal).toBe(15000);
   });
 });

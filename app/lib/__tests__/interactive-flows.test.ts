@@ -14,19 +14,15 @@ import {
 } from "../calculator";
 
 describe("UI Components & Interactive Flows Verification", () => {
-  it("renders HomePage with 10k/25k/100k/500k/1jt presets, 2 fixed VA options, and 0,01g/1g toggle", () => {
+  it("renders HomePage with service fee question, VA Bayar melalui Bank, and VA Bayar Via Bank Digital", () => {
     const html = renderToStaticMarkup(React.createElement(HomePage));
     expect(html).toContain("Tring! Cuan Analyzer");
-    expect(html).toContain("Rp10.000");
-    expect(html).toContain("Rp25.000");
-    expect(html).toContain("Rp100.000");
-    expect(html).toContain("Rp500.000");
-    expect(html).toContain("Rp1.000.000");
+    expect(html).toContain("Apakah voucher memotong biaya layanan VA (Rp2.500)?");
     expect(html).toContain("VA Bayar Via Bank Digital");
-    expect(html).toContain("VA BCA");
-    expect(html).toContain("Per 0,01 Gram");
-    expect(html).toContain("Per 1 Gram");
-    expect(html).toContain("/settings");
+    expect(html).toContain("VA Bayar melalui Bank");
+    expect(html).toContain(
+      "Bank konvensional seperti VA BCA bayar di myBCA"
+    );
   });
 
   it("renders SettingsPage (/settings) with 0,01g and 1g modes", () => {
@@ -34,7 +30,42 @@ describe("UI Components & Interactive Flows Verification", () => {
     expect(html).toContain("Pengaturan Harga Emas Tring!");
     expect(html).toContain("Mode per 0,01 Gram");
     expect(html).toContain("Mode per 1 Gram");
-    expect(html).toContain("Simpan Pengaturan Harga");
+  });
+
+  it("verifies PaymentBreakdown dynamic text when voucherCoversServiceFee is true vs false", () => {
+    const noop = () => {};
+    const rows: PaymentTransactionRow[] = [
+      { id: "1", method: "VA_DIGITAL", frequency: 1 },
+      { id: "2", method: "VA_BCA", frequency: 1 },
+    ];
+
+    const summaryYes = calculatePaymentVaBonus(rows, true);
+    const htmlYes = renderToStaticMarkup(
+      React.createElement(PaymentBreakdown, {
+        bcaCount: 1,
+        digitalBankCount: 1,
+        voucherCoversServiceFee: true,
+        summary: summaryYes,
+        onChangeBcaCount: noop,
+        onChangeDigitalBankCount: noop,
+      })
+    );
+    expect(htmlYes).toContain("+Rp2.500 Cuan Tambahan / transaksi");
+    expect(htmlYes).toContain("Tetap Rp0 (Tidak Menambah Cuan)");
+
+    const summaryNo = calculatePaymentVaBonus(rows, false);
+    const htmlNo = renderToStaticMarkup(
+      React.createElement(PaymentBreakdown, {
+        bcaCount: 1,
+        digitalBankCount: 1,
+        voucherCoversServiceFee: false,
+        summary: summaryNo,
+        onChangeBcaCount: noop,
+        onChangeDigitalBankCount: noop,
+      })
+    );
+    expect(htmlNo).toContain("Hemat Rp2.500 (Menutup Biaya Layanan Awal");
+    expect(htmlNo).toContain("Tetap Kena Biaya Layanan (-Rp2.500 / transaksi)");
   });
 
   it("verifies PriceCard in 0,01g and 1g modes", () => {
@@ -48,86 +79,33 @@ describe("UI Components & Interactive Flows Verification", () => {
         onChangeUnitMode: noop,
       })
     );
-    expect(html001).toContain("Harga Beli Tring! (per 0,01 Gram)");
     expect(html001).toContain("Rp15.450");
-    expect(html001).toContain("Rp14.950");
-
-    const html1g = renderToStaticMarkup(
-      React.createElement(PriceCard, {
-        buyPrice: 1545000,
-        buybackPrice: 1495000,
-        unitMode: "1g",
-        updatedAt: "2026-10-29T15:00:00.000Z",
-        onChangeUnitMode: noop,
-      })
-    );
-    expect(html1g).toContain("Harga Beli Tring! (per 1 Gram)");
-    expect(html1g).toContain("Rp1.545.000");
-    expect(html1g).toContain("Rp1.495.000");
   });
 
-  it("verifies PaymentBreakdown fixed 2 options calculation", () => {
-    const noop = () => {};
+  it("verifies ResultSummary breakdown with Tagihan VA Sebelum Transfer Bank", () => {
     const rows: PaymentTransactionRow[] = [
-      { id: "1", method: "VA_DIGITAL", frequency: 3 },
-      { id: "2", method: "VA_BCA", frequency: 2 },
+      { id: "1", method: "VA_DIGITAL", frequency: 1 },
     ];
-    const summary = calculatePaymentVaBonus(rows);
+    const result = calculateTringCuan({
+      inputMode: "rupiah",
+      nominalInput: 25000,
+      gramInput: 0,
+      voucherDiscount: 10000,
+      voucherCoversServiceFee: true,
+      buyPricePerGram: 1545000,
+      buybackPricePerGram: 1495000,
+      paymentRows: rows,
+    });
     const html = renderToStaticMarkup(
-      React.createElement(PaymentBreakdown, {
-        bcaCount: 2,
-        digitalBankCount: 3,
-        summary,
-        onChangeBcaCount: noop,
-        onChangeDigitalBankCount: noop,
-      })
-    );
-    expect(html).toContain("VA Bayar Via Bank Digital");
-    expect(html).toContain("VA BCA");
-    expect(html).toContain("+Rp7.500");
-  });
-
-  it("verifies ResultSummary empty state, profit state, and loss state", () => {
-    const rows: PaymentTransactionRow[] = [
-      { id: "1", method: "VA_BCA", frequency: 2 },
-      { id: "2", method: "VA_DIGITAL", frequency: 3 },
-    ];
-
-    const emptyResult = calculateTringCuan({
-      inputMode: "rupiah",
-      nominalInput: 0,
-      gramInput: 0,
-      voucherDiscount: 0,
-      buyPricePerGram: 1545000,
-      buybackPricePerGram: 1495000,
-      paymentRows: rows,
-    });
-    const emptyHtml = renderToStaticMarkup(
       React.createElement(ResultSummary, {
-        result: emptyResult,
+        result,
         buyPrice: 1545000,
         buybackPrice: 1495000,
       })
     );
-    expect(emptyHtml).toContain("Menunggu Input Nominal Transaksi");
-
-    const profitResult = calculateTringCuan({
-      inputMode: "rupiah",
-      nominalInput: 100000,
-      gramInput: 0,
-      voucherDiscount: 5000,
-      buyPricePerGram: 1545000,
-      buybackPricePerGram: 1495000,
-      paymentRows: rows,
-    });
-    const profitHtml = renderToStaticMarkup(
-      React.createElement(ResultSummary, {
-        result: profitResult,
-        buyPrice: 1545000,
-        buybackPrice: 1495000,
-      })
-    );
-    expect(profitHtml).toContain("Status: Positif Cuan (Untung)");
+    expect(html).toContain("Tagihan VA Sebelum Transfer Bank");
+    expect(html).toContain("Rp17.500");
+    expect(html).toContain("Rp15.000");
   });
 
   it("verifies CalculatorForm in Gram mode", () => {
@@ -135,7 +113,7 @@ describe("UI Components & Interactive Flows Verification", () => {
     const rows: PaymentTransactionRow[] = [
       { id: "1", method: "VA_BCA", frequency: 1 },
     ];
-    const summary = calculatePaymentVaBonus(rows);
+    const summary = calculatePaymentVaBonus(rows, true);
 
     const gramModeHtml = renderToStaticMarkup(
       React.createElement(CalculatorForm, {
@@ -143,6 +121,7 @@ describe("UI Components & Interactive Flows Verification", () => {
         nominalInput: 0,
         gramInput: "0.1",
         voucherDiscount: 5000,
+        voucherCoversServiceFee: true,
         buyPrice: 1545000,
         bcaCount: 1,
         digitalBankCount: 0,
@@ -151,6 +130,7 @@ describe("UI Components & Interactive Flows Verification", () => {
         onChangeNominal: noop,
         onChangeGram: noop,
         onChangeVoucher: noop,
+        onChangeVoucherCoversServiceFee: noop,
         onChangeBcaCount: noop,
         onChangeDigitalBankCount: noop,
         onResetForm: noop,

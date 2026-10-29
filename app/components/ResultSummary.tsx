@@ -42,12 +42,14 @@ export function ResultSummary({
       `Harga Buyback Acuan: ${formatRupiah(buybackPrice)} /g`,
       `-------------------------------------------`,
       `1. Modal Awal Pembelian: ${formatRupiah(result.modalBeli)}`,
-      `2. Total Emas Diperoleh: ${formatGram(result.totalGram)}`,
-      `3. Total Hemat Voucher: -${formatRupiah(result.voucherDiscount)}`,
-      `4. Tambahan Cuan VA Bank Digital: +${formatRupiah(result.vaBonusSummary.totalVaBonus)} (${result.vaBonusSummary.formulaText})`,
-      `5. Total Pengeluaran Bersih (Net Modal): ${formatRupiah(result.netModal)}`,
-      `6. Proyeksi Uang Diterima (Langsung Buyback): ${formatRupiah(result.buybackValue)}`,
-      `7. Selisih Bersih (Net Cuan/Rugi): ${formatSignedRupiah(result.netProfit)}`,
+      `2. Biaya Layanan VA Awal (${result.vaBonusSummary.totalTransactions}x Rp2.500): +${formatRupiah(result.vaBonusSummary.initialServiceFee)}`,
+      `3. Total Hemat Voucher: -${formatRupiah(result.voucherDiscount)} (${result.voucherCoversServiceFee ? `Potong Emas ${formatRupiah(result.voucherGoldPortion)} + Biaya Layanan ${formatRupiah(result.voucherFeePortion)}` : "Tidak memotong biaya layanan"})`,
+      `4. Tagihan Awal VA: ${formatRupiah(result.tagihanAwalVa)}`,
+      `5. Hemat Transfer VA Bank Digital: -${formatRupiah(result.vaBonusSummary.totalVaBonus)}`,
+      `6. Total Transfer Bersih (Net Modal): ${formatRupiah(result.netModal)}`,
+      `7. Total Emas Diperoleh: ${formatGram(result.totalGram)}`,
+      `8. Proyeksi Uang Diterima (Langsung Buyback): ${formatRupiah(result.buybackValue)}`,
+      `9. Selisih Bersih (Net Cuan/Rugi): ${formatSignedRupiah(result.netProfit)}`,
     ].join("\n");
 
     try {
@@ -170,7 +172,7 @@ export function ResultSummary({
 
           <p className="mt-1.5 text-xs font-medium opacity-95">
             {result.isProfitable
-              ? `Kombinasi voucher dan bonus free admin VA Bank Digital berhasil menutup spread harga emas dengan keuntungan bersih ${formatRupiah(result.netProfit)}.`
+              ? `Kombinasi voucher dan metode pembayaran VA berhasil menutup spread harga emas dengan keuntungan bersih ${formatRupiah(result.netProfit)}.`
               : `Dibutuhkan minimal voucher ${formatRupiah(result.breakEvenVoucher)} (kurang ${formatRupiah(Math.max(0, result.breakEvenVoucher - result.voucherDiscount))} lagi) untuk mencapai titik impas (Rp0).`}
           </p>
         </div>
@@ -178,7 +180,7 @@ export function ResultSummary({
         <div className="space-y-2.5 rounded-md border border-border bg-surface-subtle p-3.5">
           <div className="flex items-center justify-between text-xs font-semibold">
             <span className="text-foreground">
-              Pita Perbandingan Modal Bersih vs Nilai Buyback
+              Pita Perbandingan Transfer Bersih vs Nilai Buyback
             </span>
             <span className="font-mono tabular-nums text-muted">
               Impas Voucher: {formatRupiah(result.breakEvenVoucher)}
@@ -188,7 +190,7 @@ export function ResultSummary({
           <div className="space-y-2">
             <div>
               <div className="mb-1 flex justify-between text-xs">
-                <span className="text-muted">Pengeluaran Bersih (Net Modal)</span>
+                <span className="text-muted">Total Transfer Bersih (Net Modal)</span>
                 <span className="font-mono font-bold tabular-nums text-foreground">
                   {formatRupiah(result.netModal)}
                 </span>
@@ -227,7 +229,7 @@ export function ResultSummary({
 
           <dl className="divide-y divide-border rounded-md border border-border bg-background text-sm">
             <div className="flex items-center justify-between px-3.5 py-2.5">
-              <dt className="text-muted">Modal Awal Pembelian</dt>
+              <dt className="text-muted">Modal Awal Pembelian Emas</dt>
               <dd className="font-mono font-semibold tabular-nums text-foreground">
                 {formatRupiah(result.modalBeli)}
               </dd>
@@ -235,9 +237,25 @@ export function ResultSummary({
 
             <div className="flex items-center justify-between px-3.5 py-2.5">
               <div>
-                <dt className="text-muted">Total Hemat dari Voucher</dt>
+                <dt className="text-muted">
+                  Biaya Layanan VA Awal ({result.vaBonusSummary.totalTransactions}x Rp2.500)
+                </dt>
                 <span className="block text-[11px] text-muted">
-                  Mengurangi modal yang harus dibayar
+                  Diterapkan dari awal pada setiap transaksi VA
+                </span>
+              </div>
+              <dd className="font-mono font-semibold tabular-nums text-loss-text">
+                +{formatRupiah(result.vaBonusSummary.initialServiceFee)}
+              </dd>
+            </div>
+
+            <div className="flex items-center justify-between px-3.5 py-2.5">
+              <div>
+                <dt className="text-muted">Total Potongan Voucher</dt>
+                <span className="block text-[11px] text-muted">
+                  {result.voucherCoversServiceFee
+                    ? `Termasuk potong Biaya Layanan ${formatRupiah(result.voucherFeePortion)} + Emas ${formatRupiah(result.voucherGoldPortion)}`
+                    : "Voucher tidak memotong biaya layanan VA"}
                 </span>
               </div>
               <dd className="font-mono font-semibold tabular-nums text-profit-text">
@@ -247,25 +265,41 @@ export function ResultSummary({
 
             <div className="flex items-center justify-between px-3.5 py-2.5">
               <div>
+                <dt className="font-medium text-foreground">
+                  Tagihan VA Sebelum Transfer Bank
+                </dt>
+                <span className="block text-[11px] text-muted">
+                  Modal Beli + Biaya Layanan VA Awal - Voucher
+                </span>
+              </div>
+              <dd className="font-mono font-semibold tabular-nums text-foreground">
+                {formatRupiah(result.tagihanAwalVa)}
+              </dd>
+            </div>
+
+            <div className="flex items-center justify-between px-3.5 py-2.5">
+              <div>
                 <dt className="text-muted">
-                  Tambahan Cuan VA Bayar Via Bank Digital
+                  Hemat Transfer via VA Bank Digital ({result.vaBonusSummary.digitalBankCount}x)
                 </dt>
                 <span className="block font-mono text-[11px] tabular-nums text-muted">
-                  {result.vaBonusSummary.formulaText}
+                  {result.voucherCoversServiceFee
+                    ? `Menjadi +${formatRupiah(result.vaBonusSummary.totalVaBonus)} Cuan Tambahan karena biaya layanan sudah dipotong voucher`
+                    : `Menutup biaya layanan VA awal (bukan cuan tambahan)`}
                 </span>
               </div>
               <dd className="font-mono font-semibold tabular-nums text-profit-text">
-                +{formatRupiah(result.vaBonusSummary.totalVaBonus)}
+                -{formatRupiah(result.vaBonusSummary.totalVaBonus)}
               </dd>
             </div>
 
             <div className="flex items-center justify-between bg-surface-subtle px-3.5 py-3">
               <div>
                 <dt className="font-bold text-foreground">
-                  Total Pengeluaran Bersih (Net Modal)
+                  Total Transfer Bersih (Net Modal)
                 </dt>
                 <span className="block text-[11px] text-muted">
-                  Modal Beli - Voucher - Hemat Admin VA Bank Digital
+                  Nominal uang riil yang keluar dari rekening Anda
                 </span>
               </div>
               <dd className="font-mono text-base font-bold tabular-nums text-foreground">
@@ -305,7 +339,7 @@ export function ResultSummary({
                   Selisih Bersih (Net Cuan / Rugi)
                 </dt>
                 <span className="block text-[11px] text-muted">
-                  Nilai Penjualan Buyback - Pengeluaran Bersih
+                  Nilai Penjualan Buyback - Total Transfer Bersih
                 </span>
               </div>
               <dd

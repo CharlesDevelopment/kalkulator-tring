@@ -20,6 +20,7 @@ export interface CalculatorFormProps {
   nominalInput: number;
   gramInput: string;
   voucherDiscount: number;
+  voucherCoversServiceFee: boolean;
   buyPrice: number;
   bcaCount: number;
   digitalBankCount: number;
@@ -28,6 +29,7 @@ export interface CalculatorFormProps {
   onChangeNominal: (value: number) => void;
   onChangeGram: (value: string) => void;
   onChangeVoucher: (value: number) => void;
+  onChangeVoucherCoversServiceFee: (covers: boolean) => void;
   onChangeBcaCount: (count: number) => void;
   onChangeDigitalBankCount: (count: number) => void;
   onResetForm: () => void;
@@ -35,13 +37,14 @@ export interface CalculatorFormProps {
 
 const NOMINAL_PRESETS = [10000, 25000, 100000, 500000, 1000000];
 const GRAM_PRESETS = ["0.01", "0.05", "0.1", "0.5", "1"];
-const VOUCHER_PRESETS = [5000, 10000, 25000, 50000, 100000];
+const VOUCHER_PRESETS = [5000, 10000, 15000, 25000, 50000];
 
 export function CalculatorForm({
   inputMode,
   nominalInput,
   gramInput,
   voucherDiscount,
+  voucherCoversServiceFee,
   buyPrice,
   bcaCount,
   digitalBankCount,
@@ -50,6 +53,7 @@ export function CalculatorForm({
   onChangeNominal,
   onChangeGram,
   onChangeVoucher,
+  onChangeVoucherCoversServiceFee,
   onChangeBcaCount,
   onChangeDigitalBankCount,
   onResetForm,
@@ -75,7 +79,7 @@ export function CalculatorForm({
             <span>Parameter Pembelian & Voucher</span>
           </CardTitle>
           <p className="mt-1 text-xs text-muted">
-            Masukkan total pembelian emas (Rupiah atau Berat Gram), potongan voucher/cashback, dan jumlah transaksi VA.
+            Masukkan total pembelian emas (Rupiah atau Berat Gram), potongan voucher/cashback, dan metode pembayaran VA.
           </p>
         </div>
 
@@ -140,7 +144,7 @@ export function CalculatorForm({
                   type="text"
                   inputMode="numeric"
                   className="pl-10 text-lg font-bold"
-                  placeholder="Masukkan nominal pembelian, contoh: 100.000"
+                  placeholder="Masukkan nominal pembelian, contoh: 25.000"
                   value={formatThousandSeparator(nominalInput)}
                   onChange={(e) =>
                     onChangeNominal(parseDigitsToNumber(e.target.value))
@@ -210,67 +214,116 @@ export function CalculatorForm({
           )}
         </div>
 
-        <div className="space-y-2 border-t border-border pt-5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="voucher-discount-input">
-              2. Total Potongan Voucher / Cashback (Rp)
-            </Label>
-            {effectiveModal > 0 && voucherDiscount > 0 && (
-              <span className="font-mono text-xs font-semibold tabular-nums text-profit-text">
-                Diskon Efektif:{" "}
-                {((voucherDiscount / effectiveModal) * 100)
-                  .toFixed(2)
-                  .replace(".", ",")}
-                %
+        <div className="space-y-4 border-t border-border pt-5">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="voucher-discount-input">
+                2. Total Potongan Voucher / Cashback (Rp)
+              </Label>
+              {effectiveModal > 0 && voucherDiscount > 0 && (
+                <span className="font-mono text-xs font-semibold tabular-nums text-profit-text">
+                  Diskon Efektif:{" "}
+                  {((voucherDiscount / effectiveModal) * 100)
+                    .toFixed(2)
+                    .replace(".", ",")}
+                  %
+                </span>
+              )}
+            </div>
+
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 font-mono text-sm font-bold text-muted">
+                Rp
               </span>
-            )}
+              <Input
+                id="voucher-discount-input"
+                type="text"
+                inputMode="numeric"
+                className="pl-10 text-lg font-bold"
+                placeholder="Contoh: 10.000"
+                value={formatThousandSeparator(voucherDiscount)}
+                onChange={(e) =>
+                  onChangeVoucher(parseDigitsToNumber(e.target.value))
+                }
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {VOUCHER_PRESETS.map((preset) => (
+                <Button
+                  key={preset}
+                  type="button"
+                  variant="subtle"
+                  size="sm"
+                  onClick={() => onChangeVoucher(preset)}
+                >
+                  +{formatRupiah(preset)}
+                </Button>
+              ))}
+              {voucherDiscount > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onChangeVoucher(0)}
+                >
+                  Tanpa Voucher (Rp0)
+                </Button>
+              )}
+            </div>
           </div>
 
-          <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 font-mono text-sm font-bold text-muted">
-              Rp
-            </span>
-            <Input
-              id="voucher-discount-input"
-              type="text"
-              inputMode="numeric"
-              className="pl-10 text-lg font-bold"
-              placeholder="Contoh: 10.000"
-              value={formatThousandSeparator(voucherDiscount)}
-              onChange={(e) =>
-                onChangeVoucher(parseDigitsToNumber(e.target.value))
-              }
-            />
-          </div>
+          <div className="rounded-md border border-border bg-surface-subtle p-3.5 space-y-2.5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <span className="block text-sm font-bold text-foreground">
+                  Apakah voucher memotong biaya layanan VA (Rp2.500)?
+                </span>
+                <span className="block text-xs text-muted">
+                  {voucherCoversServiceFee
+                    ? "Ya: Voucher sudah menggratiskan biaya layanan Rp2.500, sehingga bayar via Bank Digital memberi +Rp2.500 Cuan Tambahan."
+                    : "Tidak: Biaya layanan Rp2.500 tetap ditagihkan, sehingga bayar via Bank Digital hanya menutup biaya layanan tersebut (tanpa tambahan cuan)."}
+                </span>
+              </div>
 
-          <div className="flex flex-wrap gap-1.5">
-            {VOUCHER_PRESETS.map((preset) => (
-              <Button
-                key={preset}
-                type="button"
-                variant="subtle"
-                size="sm"
-                onClick={() => onChangeVoucher(preset)}
+              <div
+                role="group"
+                aria-label="Apakah voucher memotong biaya layanan"
+                className="grid grid-cols-2 gap-1.5 rounded-md border border-border-control bg-background p-1 shrink-0"
               >
-                +{formatRupiah(preset)}
-              </Button>
-            ))}
-            {voucherDiscount > 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => onChangeVoucher(0)}
-              >
-                Tanpa Voucher (Rp0)
-              </Button>
-            )}
+                <button
+                  type="button"
+                  onClick={() => onChangeVoucherCoversServiceFee(true)}
+                  aria-pressed={voucherCoversServiceFee}
+                  className={`min-h-[40px] rounded px-3 py-1.5 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    voucherCoversServiceFee
+                      ? "bg-accent text-accent-foreground"
+                      : "text-foreground hover:bg-surface"
+                  }`}
+                >
+                  Ya (+Rp2.500 Cuan)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChangeVoucherCoversServiceFee(false)}
+                  aria-pressed={!voucherCoversServiceFee}
+                  className={`min-h-[40px] rounded px-3 py-1.5 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    !voucherCoversServiceFee
+                      ? "bg-accent text-accent-foreground"
+                      : "text-foreground hover:bg-surface"
+                  }`}
+                >
+                  Tidak (Normal)
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         <PaymentBreakdown
           bcaCount={bcaCount}
           digitalBankCount={digitalBankCount}
+          voucherCoversServiceFee={voucherCoversServiceFee}
           summary={paymentSummary}
           onChangeBcaCount={onChangeBcaCount}
           onChangeDigitalBankCount={onChangeDigitalBankCount}

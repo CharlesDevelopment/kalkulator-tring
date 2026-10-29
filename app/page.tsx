@@ -37,9 +37,11 @@ export default function HomePage() {
   );
 
   const [inputMode, setInputMode] = useState<InputMode>("rupiah");
-  const [nominalInput, setNominalInput] = useState<number>(100000);
-  const [gramInput, setGramInput] = useState<string>("0.1");
+  const [nominalInput, setNominalInput] = useState<number>(25000);
+  const [gramInput, setGramInput] = useState<string>("0.05");
   const [voucherDiscount, setVoucherDiscount] = useState<number>(10000);
+  const [voucherCoversServiceFee, setVoucherCoversServiceFee] =
+    useState<boolean>(true);
   const [digitalBankCount, setDigitalBankCount] = useState<number>(1);
   const [bcaCount, setBcaCount] = useState<number>(0);
 
@@ -87,7 +89,8 @@ export default function HomePage() {
     setNominalInput(0);
     setGramInput("0");
     setVoucherDiscount(0);
-    setDigitalBankCount(0);
+    setVoucherCoversServiceFee(true);
+    setDigitalBankCount(1);
     setBcaCount(0);
   };
 
@@ -100,8 +103,8 @@ export default function HomePage() {
   );
 
   const paymentSummary = useMemo(
-    () => calculatePaymentVaBonus(paymentRows),
-    [paymentRows]
+    () => calculatePaymentVaBonus(paymentRows, voucherCoversServiceFee),
+    [paymentRows, voucherCoversServiceFee]
   );
 
   const calculationResult = useMemo(() => {
@@ -111,6 +114,7 @@ export default function HomePage() {
       nominalInput,
       gramInput: parsedGram,
       voucherDiscount,
+      voucherCoversServiceFee,
       buyPricePerGram: buyPrice,
       buybackPricePerGram: buybackPrice,
       paymentRows,
@@ -120,6 +124,7 @@ export default function HomePage() {
     nominalInput,
     gramInput,
     voucherDiscount,
+    voucherCoversServiceFee,
     buyPrice,
     buybackPrice,
     paymentRows,
@@ -141,7 +146,7 @@ export default function HomePage() {
                 Tring! Cuan Analyzer
               </h1>
               <p className="text-xs text-muted">
-                Kalkulator Audit Emas, Voucher & VA Bayar Via Bank Digital
+                Kalkulator Audit Emas, Voucher & VA Bank Digital vs Bank Konvensional
               </p>
             </div>
           </div>
@@ -197,6 +202,7 @@ export default function HomePage() {
               nominalInput={nominalInput}
               gramInput={gramInput}
               voucherDiscount={voucherDiscount}
+              voucherCoversServiceFee={voucherCoversServiceFee}
               buyPrice={buyPrice}
               bcaCount={bcaCount}
               digitalBankCount={digitalBankCount}
@@ -205,6 +211,7 @@ export default function HomePage() {
               onChangeNominal={setNominalInput}
               onChangeGram={setGramInput}
               onChangeVoucher={setVoucherDiscount}
+              onChangeVoucherCoversServiceFee={setVoucherCoversServiceFee}
               onChangeBcaCount={setBcaCount}
               onChangeDigitalBankCount={setDigitalBankCount}
               onResetForm={handleResetForm}
@@ -224,10 +231,10 @@ export default function HomePage() {
       <footer className="mt-10 border-t border-border bg-surface py-4">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-2 px-4 text-xs text-muted sm:flex-row sm:items-center sm:px-6 lg:px-8">
           <p>
-            Alat bantu simulasi untuk menghitung selisih beli, voucher promo, cuan free admin VA Bank Digital, dan buyback emas Tring! by Pegadaian.
+            Alat bantu simulasi untuk menghitung selisih beli, voucher promo, biaya layanan VA Rp2.500, dan buyback emas Tring! by Pegadaian.
           </p>
           <p className="font-mono tabular-nums">
-            VA BCA: Tetap (Rp0) · VA Bayar Via Bank Digital: +Rp2.500 Cuan/transaksi
+            Biaya Layanan VA Awal: Rp2.500/tx · Bank Digital: Hemat Rp2.500/tx
           </p>
         </div>
       </footer>
