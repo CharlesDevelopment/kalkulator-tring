@@ -5,7 +5,7 @@ export type PaymentMethodType = "VA_BCA" | "VA_DIGITAL";
 export interface PaymentTransactionRow {
   id: string;
   method: PaymentMethodType;
-  label: string;
+  label?: string;
   frequency: number;
 }
 

@@ -6,12 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/ca
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import {
-  InputMode,
-  PaymentMethodType,
-  PaymentTransactionRow,
-  PaymentBonusSummary,
-} from "@/app/lib/calculator";
+import { InputMode, PaymentBonusSummary } from "@/app/lib/calculator";
 import {
   formatRupiah,
   formatGram,
@@ -26,29 +21,21 @@ export interface CalculatorFormProps {
   gramInput: string;
   voucherDiscount: number;
   buyPrice: number;
-  paymentRows: PaymentTransactionRow[];
+  bcaCount: number;
+  digitalBankCount: number;
   paymentSummary: PaymentBonusSummary;
   onChangeInputMode: (mode: InputMode) => void;
   onChangeNominal: (value: number) => void;
   onChangeGram: (value: string) => void;
   onChangeVoucher: (value: number) => void;
-  onAddPaymentRow: (
-    method?: PaymentMethodType,
-    label?: string,
-    frequency?: number
-  ) => void;
-  onUpdatePaymentRow: (
-    id: string,
-    updates: Partial<Omit<PaymentTransactionRow, "id">>
-  ) => void;
-  onRemovePaymentRow: (id: string) => void;
-  onApplyPresetSplit: (bcaFreq: number, otherFreq: number) => void;
+  onChangeBcaCount: (count: number) => void;
+  onChangeDigitalBankCount: (count: number) => void;
   onResetForm: () => void;
 }
 
-const NOMINAL_PRESETS = [500000, 1000000, 2500000, 5000000];
-const GRAM_PRESETS = ["0.5", "1", "2", "5"];
-const VOUCHER_PRESETS = [25000, 50000, 100000, 250000];
+const NOMINAL_PRESETS = [10000, 25000, 100000, 500000, 1000000];
+const GRAM_PRESETS = ["0.01", "0.05", "0.1", "0.5", "1"];
+const VOUCHER_PRESETS = [5000, 10000, 25000, 50000, 100000];
 
 export function CalculatorForm({
   inputMode,
@@ -56,16 +43,15 @@ export function CalculatorForm({
   gramInput,
   voucherDiscount,
   buyPrice,
-  paymentRows,
+  bcaCount,
+  digitalBankCount,
   paymentSummary,
   onChangeInputMode,
   onChangeNominal,
   onChangeGram,
   onChangeVoucher,
-  onAddPaymentRow,
-  onUpdatePaymentRow,
-  onRemovePaymentRow,
-  onApplyPresetSplit,
+  onChangeBcaCount,
+  onChangeDigitalBankCount,
   onResetForm,
 }: CalculatorFormProps) {
   const parsedGram = Number.parseFloat(gramInput.replace(",", ".")) || 0;
@@ -89,7 +75,7 @@ export function CalculatorForm({
             <span>Parameter Pembelian & Voucher</span>
           </CardTitle>
           <p className="mt-1 text-xs text-muted">
-            Masukkan total pembelian emas (dalam Rupiah atau Berat Gram), potongan voucher/cashback, dan pemecahan transaksi VA.
+            Masukkan total pembelian emas (Rupiah atau Berat Gram), potongan voucher/cashback, dan jumlah transaksi VA.
           </p>
         </div>
 
@@ -154,7 +140,7 @@ export function CalculatorForm({
                   type="text"
                   inputMode="numeric"
                   className="pl-10 text-lg font-bold"
-                  placeholder="Masukkan nominal pembelian, contoh: 2.500.000"
+                  placeholder="Masukkan nominal pembelian, contoh: 100.000"
                   value={formatThousandSeparator(nominalInput)}
                   onChange={(e) =>
                     onChangeNominal(parseDigitsToNumber(e.target.value))
@@ -188,11 +174,11 @@ export function CalculatorForm({
                 <Input
                   id="purchase-primary-input"
                   type="number"
-                  step="0.0001"
+                  step="0.01"
                   min="0"
                   inputMode="decimal"
                   className="pr-16 text-lg font-bold"
-                  placeholder="Masukkan berat gram, contoh: 1.5"
+                  placeholder="Masukkan berat gram, contoh: 0.1"
                   value={gramInput}
                   onChange={(e) => onChangeGram(e.target.value)}
                 />
@@ -249,7 +235,7 @@ export function CalculatorForm({
               type="text"
               inputMode="numeric"
               className="pl-10 text-lg font-bold"
-              placeholder="Contoh: 120.000"
+              placeholder="Contoh: 10.000"
               value={formatThousandSeparator(voucherDiscount)}
               onChange={(e) =>
                 onChangeVoucher(parseDigitsToNumber(e.target.value))
@@ -283,12 +269,11 @@ export function CalculatorForm({
         </div>
 
         <PaymentBreakdown
-          rows={paymentRows}
+          bcaCount={bcaCount}
+          digitalBankCount={digitalBankCount}
           summary={paymentSummary}
-          onAddRow={onAddPaymentRow}
-          onUpdateRow={onUpdatePaymentRow}
-          onRemoveRow={onRemovePaymentRow}
-          onApplyPresetSplit={onApplyPresetSplit}
+          onChangeBcaCount={onChangeBcaCount}
+          onChangeDigitalBankCount={onChangeDigitalBankCount}
         />
       </CardContent>
     </Card>
