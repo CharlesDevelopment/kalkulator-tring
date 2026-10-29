@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Plus Jakarta Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, "Courier New", monospace;
+  --bg-primary: #F4F6F4;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #EAEFEA;
+  --text-primary: #0F1E16;
+  --text-secondary: #3D5245;
+  --border-card: #CBD5CE;
+  --border-control: #64746B;
+  --accent-bg: #005E38;
+  --accent-fg: #FFFFFF;
+  --gold-text: #6B4200;
+  --gold-bg: #FEF3C7;
+  --gold-border: #D97706;
+  --profit-text: #0B4F28;
+  --profit-bg: #DCFCE7;
+  --profit-border: #22C55E;
+  --loss-text: #7F1D1D;
+  --loss-bg: #FEE2E2;
+  --loss-border: #EF4444;
+  --warn-text: #6B4200;
+  --warn-bg: #FEF3C7;
+  --warn-border: #D97706;
+}
+
+.dark {
+  --bg-primary: #0A110E;
+  --bg-surface: #111C17;
+  --bg-subtle: #182720;
+  --text-primary: #ECF3EF;
+  --text-secondary: #9BB5A6;
+  --border-card: #24382E;
+  --border-control: #5E8572;
+  --accent-bg: #F2B830;
+  --accent-fg: #0A110E;
+  --gold-text: #FDE047;
+  --gold-bg: #291F07;
+  --gold-border: #EAB308;
+  --profit-text: #6EE7B7;
+  --profit-bg: #092A1C;
+  --profit-border: #10B981;
+  --loss-text: #FCA5A5;
+  --loss-bg: #2C1215;
+  --loss-border: #EF4444;
+  --warn-text: #FDE047;
+  --warn-bg: #291F07;
+  --warn-border: #EAB308;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-accent selection:text-accent-foreground;
+    overflow-x: hidden;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
