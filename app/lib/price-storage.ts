@@ -7,60 +7,65 @@ export interface StoredPriceSettings {
   updatedAt: string;
 }
 
-export const PRICE_SETTINGS_STORAGE_KEY = "tring-price-settings-v1";
+export const LOCAL_PRICE_STORAGE_KEY = "tring-local-price-override-v1";
 
 export const DEFAULT_PRICE_SETTINGS: StoredPriceSettings = {
   buyPricePerGram: 1545000,
   buybackPricePerGram: 1495000,
   unitMode: "0.01g",
-  updatedAt: "2026-10-29T15:00:00.000Z",
+  updatedAt: "2026-10-29T16:40:00.000Z",
 };
 
-export function loadPriceSettings(): StoredPriceSettings {
+export function loadLocalPriceOverride(): StoredPriceSettings | null {
   if (typeof window === "undefined") {
-    return DEFAULT_PRICE_SETTINGS;
+    return null;
   }
   try {
-    const raw = window.localStorage.getItem(PRICE_SETTINGS_STORAGE_KEY);
-    if (!raw) return DEFAULT_PRICE_SETTINGS;
+    const raw = window.localStorage.getItem(LOCAL_PRICE_STORAGE_KEY);
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<StoredPriceSettings>;
-    const buyPricePerGram =
-      typeof parsed.buyPricePerGram === "number" && parsed.buyPricePerGram > 0
-        ? parsed.buyPricePerGram
-        : DEFAULT_PRICE_SETTINGS.buyPricePerGram;
-    const buybackPricePerGram =
+    if (
+      typeof parsed.buyPricePerGram === "number" &&
+      parsed.buyPricePerGram > 0 &&
       typeof parsed.buybackPricePerGram === "number" &&
       parsed.buybackPricePerGram > 0
-        ? parsed.buybackPricePerGram
-        : DEFAULT_PRICE_SETTINGS.buybackPricePerGram;
-    const unitMode: PriceUnitMode =
-      parsed.unitMode === "1g" || parsed.unitMode === "0.01g"
-        ? parsed.unitMode
-        : DEFAULT_PRICE_SETTINGS.unitMode;
-    const updatedAt =
-      typeof parsed.updatedAt === "string" && parsed.updatedAt
-        ? parsed.updatedAt
-        : DEFAULT_PRICE_SETTINGS.updatedAt;
-
-    return {
-      buyPricePerGram,
-      buybackPricePerGram,
-      unitMode,
-      updatedAt,
-    };
+    ) {
+      return {
+        buyPricePerGram: parsed.buyPricePerGram,
+        buybackPricePerGram: parsed.buybackPricePerGram,
+        unitMode:
+          parsed.unitMode === "1g" || parsed.unitMode === "0.01g"
+            ? parsed.unitMode
+            : "0.01g",
+        updatedAt:
+          typeof parsed.updatedAt === "string" && parsed.updatedAt
+            ? parsed.updatedAt
+            : new Date().toISOString(),
+      };
+    }
+    return null;
   } catch {
-    return DEFAULT_PRICE_SETTINGS;
+    return null;
   }
 }
 
-export function savePriceSettings(settings: StoredPriceSettings): void {
+export function saveLocalPriceOverride(settings: StoredPriceSettings): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(
-      PRICE_SETTINGS_STORAGE_KEY,
+      LOCAL_PRICE_STORAGE_KEY,
       JSON.stringify(settings)
     );
   } catch {
     // Ignore storage quota errors
+  }
+}
+
+export function clearLocalPriceOverride(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(LOCAL_PRICE_STORAGE_KEY);
+  } catch {
+    // Ignore storage errors
   }
 }

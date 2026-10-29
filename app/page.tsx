@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
-import { Scale, Sun, Moon, Settings } from "lucide-react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Scale, Sun, Moon } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { PriceCard } from "@/app/components/PriceCard";
 import { CalculatorForm } from "@/app/components/CalculatorForm";
@@ -15,25 +14,22 @@ import {
 } from "@/app/lib/calculator";
 import {
   PriceUnitMode,
+  StoredPriceSettings,
   DEFAULT_PRICE_SETTINGS,
-  loadPriceSettings,
-  savePriceSettings,
+  loadLocalPriceOverride,
+  saveLocalPriceOverride,
+  clearLocalPriceOverride,
 } from "@/app/lib/price-storage";
 
 export default function HomePage() {
   const [isDark, setIsDark] = useState(false);
 
-  const [buyPrice, setBuyPrice] = useState<number>(
-    DEFAULT_PRICE_SETTINGS.buyPricePerGram
-  );
-  const [buybackPrice, setBuybackPrice] = useState<number>(
-    DEFAULT_PRICE_SETTINGS.buybackPricePerGram
-  );
+  const [universalSettings, setUniversalSettings] =
+    useState<StoredPriceSettings>(DEFAULT_PRICE_SETTINGS);
+  const [localOverride, setLocalOverride] =
+    useState<StoredPriceSettings | null>(null);
   const [unitMode, setUnitMode] = useState<PriceUnitMode>(
     DEFAULT_PRICE_SETTINGS.unitMode
-  );
-  const [priceUpdatedAt, setPriceUpdatedAt] = useState<string>(
-    DEFAULT_PRICE_SETTINGS.updatedAt
   );
 
   const [inputMode, setInputMode] = useState<InputMode>("rupiah");
@@ -45,6 +41,28 @@ export default function HomePage() {
   const [digitalBankCount, setDigitalBankCount] = useState<number>(1);
   const [bcaCount, setBcaCount] = useState<number>(0);
 
+  const fetchUniversalSettings = useCallback(async () => {
+    try {
+      const res = await fetch("/api/price", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as StoredPriceSettings;
+      if (
+        typeof data.buyPricePerGram === "number" &&
+        data.buyPricePerGram > 0 &&
+        typeof data.buybackPricePerGram === "number" &&
+        data.buybackPricePerGram > 0
+      ) {
+        setUniversalSettings(data);
+        const existingLocal = loadLocalPriceOverride();
+        if (!existingLocal && data.unitMode) {
+          setUnitMode(data.unitMode);
+        }
+      }
+    } catch {
+      // Keep default universal settings if offline
+    }
+  }, []);
+
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("tring-theme");
     if (savedTheme === "dark") {
@@ -55,12 +73,19 @@ export default function HomePage() {
       document.documentElement.classList.remove("dark");
     }
 
-    const stored = loadPriceSettings();
-    setBuyPrice(stored.buyPricePerGram);
-    setBuybackPrice(stored.buybackPricePerGram);
-    setUnitMode(stored.unitMode);
-    setPriceUpdatedAt(stored.updatedAt);
-  }, []);
+    const storedLocal = loadLocalPriceOverride();
+    if (storedLocal) {
+      setLocalOverride(storedLocal);
+      setUnitMode(storedLocal.unitMode);
+    }
+
+    fetchUniversalSettings();
+  }, [fetchUniversalSettings]);
+
+  const activeSettings = localOverride ?? universalSettings;
+  const buyPrice = activeSettings.buyPricePerGram;
+  const buybackPrice = activeSettings.buybackPricePerGram;
+  const priceUpdatedAt = activeSettings.updatedAt;
 
   const handleToggleTheme = () => {
     const nextDark = !isDark;
@@ -76,12 +101,35 @@ export default function HomePage() {
 
   const handleChangeUnitMode = (nextMode: PriceUnitMode) => {
     setUnitMode(nextMode);
-    savePriceSettings({
-      buyPricePerGram: buyPrice,
-      buybackPricePerGram: buybackPrice,
-      unitMode: nextMode,
-      updatedAt: priceUpdatedAt,
-    });
+    if (localOverride) {
+      const updated: StoredPriceSettings = {
+        ...localOverride,
+        unitMode: nextMode,
+      };
+      setLocalOverride(updated);
+      saveLocalPriceOverride(updated);
+    }
+  };
+
+  const handleSaveLocalPrice = (
+    newBuyPerGram: number,
+    newBuybackPerGram: number
+  ) => {
+    const updated: StoredPriceSettings = {
+      buyPricePerGram: newBuyPerGram,
+      buybackPricePerGram: newBuybackPerGram,
+      unitMode,
+      updatedAt: new Date().toISOString(),
+    };
+    setLocalOverride(updated);
+    saveLocalPriceOverride(updated);
+  };
+
+  const handleResetToUniversal = () => {
+    clearLocalPriceOverride();
+    setLocalOverride(null);
+    setUnitMode(universalSettings.unitMode);
+    fetchUniversalSettings();
   };
 
   const handleResetForm = () => {
@@ -152,13 +200,6 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button asChild variant="subtle" size="sm">
-              <Link href="/settings">
-                <Settings className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Pengaturan Harga</span>
-              </Link>
-            </Button>
-
             <Button
               type="button"
               variant="outline"
@@ -192,7 +233,10 @@ export default function HomePage() {
           buybackPrice={buybackPrice}
           unitMode={unitMode}
           updatedAt={priceUpdatedAt}
+          isLocalOverride={Boolean(localOverride)}
           onChangeUnitMode={handleChangeUnitMode}
+          onSaveLocalPrice={handleSaveLocalPrice}
+          onResetToUniversal={handleResetToUniversal}
         />
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-12 lg:items-start">

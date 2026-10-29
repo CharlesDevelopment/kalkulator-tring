@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Scale, ArrowLeft, Save, RotateCcw, CheckCircle2, Sun, Moon } from "lucide-react";
+import {
+  Scale,
+  ArrowLeft,
+  Save,
+  CheckCircle2,
+  Sun,
+  Moon,
+  Lock,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -10,8 +20,8 @@ import { Label } from "@/app/components/ui/label";
 import {
   PriceUnitMode,
   DEFAULT_PRICE_SETTINGS,
-  loadPriceSettings,
-  savePriceSettings,
+  StoredPriceSettings,
+  clearLocalPriceOverride,
 } from "@/app/lib/price-storage";
 import {
   formatRupiah,
@@ -34,7 +44,11 @@ export default function SettingsPage() {
   const [updatedAt, setUpdatedAt] = useState<string>(
     DEFAULT_PRICE_SETTINGS.updatedAt
   );
+
+  const [password, setPassword] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [savedNotice, setSavedNotice] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("tring-theme");
@@ -46,11 +60,20 @@ export default function SettingsPage() {
       document.documentElement.classList.remove("dark");
     }
 
-    const stored = loadPriceSettings();
-    setBuyPricePerGram(stored.buyPricePerGram);
-    setBuybackPricePerGram(stored.buybackPricePerGram);
-    setUnitMode(stored.unitMode);
-    setUpdatedAt(stored.updatedAt);
+    fetch("/api/price", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data: StoredPriceSettings) => {
+        if (
+          typeof data.buyPricePerGram === "number" &&
+          data.buyPricePerGram > 0
+        ) {
+          setBuyPricePerGram(data.buyPricePerGram);
+          setBuybackPricePerGram(data.buybackPricePerGram);
+          setUnitMode(data.unitMode || "0.01g");
+          setUpdatedAt(data.updatedAt || new Date().toISOString());
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleToggleTheme = () => {
@@ -77,40 +100,57 @@ export default function SettingsPage() {
     const nextPerGram = isPer001 ? rawDigits * 100 : rawDigits;
     setBuyPricePerGram(nextPerGram);
     setSavedNotice(false);
+    setErrorMessage(null);
   };
 
   const handleBuybackInputChange = (rawDigits: number) => {
     const nextPerGram = isPer001 ? rawDigits * 100 : rawDigits;
     setBuybackPricePerGram(nextPerGram);
     setSavedNotice(false);
+    setErrorMessage(null);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSaveUniversal = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nowIso = new Date().toISOString();
-    savePriceSettings({
-      buyPricePerGram,
-      buybackPricePerGram,
-      unitMode,
-      updatedAt: nowIso,
-    });
-    setUpdatedAt(nowIso);
-    setSavedNotice(true);
-  };
+    setIsSaving(true);
+    setSavedNotice(false);
+    setErrorMessage(null);
 
-  const handleResetDefault = () => {
-    const nowIso = new Date().toISOString();
-    setBuyPricePerGram(DEFAULT_PRICE_SETTINGS.buyPricePerGram);
-    setBuybackPricePerGram(DEFAULT_PRICE_SETTINGS.buybackPricePerGram);
-    setUnitMode(DEFAULT_PRICE_SETTINGS.unitMode);
-    setUpdatedAt(nowIso);
-    savePriceSettings({
-      buyPricePerGram: DEFAULT_PRICE_SETTINGS.buyPricePerGram,
-      buybackPricePerGram: DEFAULT_PRICE_SETTINGS.buybackPricePerGram,
-      unitMode: DEFAULT_PRICE_SETTINGS.unitMode,
-      updatedAt: nowIso,
-    });
-    setSavedNotice(true);
+    try {
+      const res = await fetch("/api/price", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          password,
+          buyPricePerGram,
+          buybackPricePerGram,
+          unitMode,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMessage(
+          data.error || "Gagal menyimpan pengaturan harga universal."
+        );
+      } else {
+        if (data.settings?.updatedAt) {
+          setUpdatedAt(data.settings.updatedAt);
+        }
+        // Bersihkan override lokal di perangkat admin agar langsung melihat harga universal baru
+        clearLocalPriceOverride();
+        setSavedNotice(true);
+      }
+    } catch {
+      setErrorMessage(
+        "Gagal menghubungi server untuk menyimpan harga universal."
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const spreadPerGram = Math.max(0, buyPricePerGram - buybackPricePerGram);
@@ -131,10 +171,10 @@ export default function SettingsPage() {
             </div>
             <div>
               <h1 className="text-base font-bold tracking-tight text-foreground sm:text-lg">
-                Pengaturan Harga Emas Tring!
+                Pengaturan Harga Universal (Admin)
               </h1>
               <p className="text-xs text-muted">
-                Sesuaikan Harga Beli & Harga Jual (Buyback) per 0,01 gram atau per 1 gram
+                Perubahan di halaman ini akan memperbarui harga emas di seluruh perangkat pengunjung
               </p>
             </div>
           </div>
@@ -176,9 +216,9 @@ export default function SettingsPage() {
         <Card>
           <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Atur Kurs Harga Beli & Buyback Sendiri</CardTitle>
+              <CardTitle>Atur Kurs Harga Universal (Semua Device)</CardTitle>
               <p className="mt-1 text-xs text-muted">
-                Terakhir disimpan:{" "}
+                Terakhir diperbarui:{" "}
                 <span className="font-mono tabular-nums text-foreground">
                   {formatTimestampWIB(updatedAt)}
                 </span>
@@ -218,7 +258,7 @@ export default function SettingsPage() {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSave} className="space-y-6">
+            <form onSubmit={handleSaveUniversal} className="space-y-6">
               {savedNotice && (
                 <div
                   role="status"
@@ -227,7 +267,7 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>
-                      Harga emas berhasil disimpan! Kalkulator utama otomatis menggunakan harga ini.
+                      Harga Universal berhasil diperbarui untuk semua perangkat!
                     </span>
                   </div>
                   <Link
@@ -236,6 +276,16 @@ export default function SettingsPage() {
                   >
                     Buka Kalkulator
                   </Link>
+                </div>
+              )}
+
+              {errorMessage && (
+                <div
+                  role="alert"
+                  className="flex items-center gap-2 rounded-md border border-loss-border bg-loss-bg p-3.5 text-xs font-semibold text-loss-text"
+                >
+                  <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{errorMessage}</span>
                 </div>
               )}
 
@@ -253,7 +303,9 @@ export default function SettingsPage() {
                       type="text"
                       inputMode="numeric"
                       className="pl-10 text-lg font-bold"
-                      placeholder={isPer001 ? "Contoh: 15.450" : "Contoh: 1.545.000"}
+                      placeholder={
+                        isPer001 ? "Contoh: 20.000" : "Contoh: 2.000.000"
+                      }
                       value={formatThousandSeparator(displayedBuyValue)}
                       onChange={(e) =>
                         handleBuyInputChange(parseDigitsToNumber(e.target.value))
@@ -280,7 +332,9 @@ export default function SettingsPage() {
                       type="text"
                       inputMode="numeric"
                       className="pl-10 text-lg font-bold"
-                      placeholder={isPer001 ? "Contoh: 14.950" : "Contoh: 1.495.000"}
+                      placeholder={
+                        isPer001 ? "Contoh: 19.300" : "Contoh: 1.930.000"
+                      }
                       value={formatThousandSeparator(displayedBuybackValue)}
                       onChange={(e) =>
                         handleBuybackInputChange(
@@ -320,22 +374,45 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleResetDefault}
+              <div className="rounded-md border border-border bg-surface-subtle p-4 space-y-2">
+                <Label
+                  htmlFor="admin-password-input"
+                  className="flex items-center gap-1.5 text-sm font-bold text-foreground"
                 >
-                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                  <span>Reset ke Harga Standar</span>
-                </Button>
+                  <Lock className="h-4 w-4 text-muted" aria-hidden="true" />
+                  <span>Password Admin untuk Menyimpan Harga Universal</span>
+                </Label>
+                <Input
+                  id="admin-password-input"
+                  type="password"
+                  className="font-sans"
+                  placeholder="Masukkan password admin..."
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrorMessage(null);
+                  }}
+                  required
+                />
+                <p className="text-xs text-muted">
+                  Diperlukan password agar pengunjung biasa tidak dapat mengubah harga universal seenaknya.
+                </p>
+              </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button type="submit" variant="default">
-                    <Save className="h-4 w-4" aria-hidden="true" />
-                    <span>Simpan Pengaturan Harga</span>
-                  </Button>
-                </div>
+              <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-4">
+                <Button type="submit" variant="default" disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      <span>Menyimpan ke Semua Device...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" aria-hidden="true" />
+                      <span>Simpan Harga Universal</span>
+                    </>
+                  )}
+                </Button>
               </div>
             </form>
           </CardContent>

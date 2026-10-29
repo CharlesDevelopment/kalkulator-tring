@@ -14,22 +14,22 @@ import {
 } from "../calculator";
 
 describe("UI Components & Interactive Flows Verification", () => {
-  it("renders HomePage with service fee question, VA Bayar melalui Bank, and VA Bayar Via Bank Digital", () => {
+  it("renders HomePage WITHOUT /settings link and WITH Sesuaikan Harga Lokal button", () => {
     const html = renderToStaticMarkup(React.createElement(HomePage));
     expect(html).toContain("Tring! Cuan Analyzer");
+    expect(html).not.toContain('href="/settings"');
+    expect(html).toContain("Sesuaikan Harga Lokal");
+    expect(html).toContain("Harga Universal Aktif");
     expect(html).toContain("Apakah voucher memotong biaya layanan VA (Rp2.500)?");
     expect(html).toContain("VA Bayar Via Bank Digital");
     expect(html).toContain("VA Bayar melalui Bank");
-    expect(html).toContain(
-      "Bank konvensional seperti VA BCA bayar di myBCA"
-    );
   });
 
-  it("renders SettingsPage (/settings) with 0,01g and 1g modes", () => {
+  it("renders SettingsPage (/settings) with Admin Password field and Universal Price controls", () => {
     const html = renderToStaticMarkup(React.createElement(SettingsPage));
-    expect(html).toContain("Pengaturan Harga Emas Tring!");
-    expect(html).toContain("Mode per 0,01 Gram");
-    expect(html).toContain("Mode per 1 Gram");
+    expect(html).toContain("Pengaturan Harga Universal (Admin)");
+    expect(html).toContain("Password Admin untuk Menyimpan Harga Universal");
+    expect(html).toContain("Simpan Harga Universal");
   });
 
   it("verifies PaymentBreakdown dynamic text when voucherCoversServiceFee is true vs false", () => {
@@ -68,7 +68,7 @@ describe("UI Components & Interactive Flows Verification", () => {
     expect(htmlNo).toContain("Tetap Kena Biaya Layanan (-Rp2.500 / transaksi)");
   });
 
-  it("verifies PriceCard in 0,01g and 1g modes", () => {
+  it("verifies PriceCard in 0,01g and 1g modes and local override indicator", () => {
     const noop = () => {};
     const html001 = renderToStaticMarkup(
       React.createElement(PriceCard, {
@@ -76,10 +76,14 @@ describe("UI Components & Interactive Flows Verification", () => {
         buybackPrice: 1495000,
         unitMode: "0.01g",
         updatedAt: "2026-10-29T15:00:00.000Z",
+        isLocalOverride: true,
         onChangeUnitMode: noop,
+        onSaveLocalPrice: noop,
+        onResetToUniversal: noop,
       })
     );
     expect(html001).toContain("Rp15.450");
+    expect(html001).toContain("Mode Harga Lokal (Device Ini)");
   });
 
   it("verifies ResultSummary breakdown with Tagihan VA Sebelum Transfer Bank", () => {
