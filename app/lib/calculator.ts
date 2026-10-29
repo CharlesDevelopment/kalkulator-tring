@@ -31,6 +31,8 @@ export interface PaymentBonusSummary {
 }
 
 export interface TringCalculationResult {
+  modalBeliPerTx: number;
+  voucherDiscountPerTx: number;
   modalBeli: number;
   totalGram: number;
   voucherDiscount: number;
@@ -42,6 +44,7 @@ export interface TringCalculationResult {
   netModal: number;
   buybackValue: number;
   netProfit: number;
+  netProfitPerTx: number;
   roiPercentage: number;
   spreadPerGram: number;
   spreadPercentage: number;
@@ -124,6 +127,8 @@ export function calculateTringCuan(
 
   if (buyPrice <= 0 || buybackPrice <= 0) {
     return {
+      modalBeliPerTx: 0,
+      voucherDiscountPerTx: 0,
       modalBeli: 0,
       totalGram: 0,
       voucherDiscount: 0,
@@ -135,6 +140,7 @@ export function calculateTringCuan(
       netModal: 0,
       buybackValue: 0,
       netProfit: 0,
+      netProfitPerTx: 0,
       roiPercentage: 0,
       spreadPerGram: 0,
       spreadPercentage: 0,
@@ -146,25 +152,29 @@ export function calculateTringCuan(
     };
   }
 
-  const rawModalBeli =
+  const rawModalPerTx =
     input.inputMode === "rupiah"
       ? Math.max(0, input.nominalInput)
       : Math.max(0, input.gramInput) * buyPrice;
 
-  const modalBeli = Math.round(rawModalBeli);
-  const totalGram =
+  const modalBeliPerTx = Math.round(rawModalPerTx);
+  const gramPerTx =
     input.inputMode === "gram"
       ? Math.max(0, input.gramInput)
-      : modalBeli / buyPrice;
+      : modalBeliPerTx / buyPrice;
 
-  const maxAllowedVoucher = modalBeli + vaBonusSummary.initialServiceFee;
-  const voucherDiscount = Math.max(
+  const maxVoucherPerTx = modalBeliPerTx + VA_SERVICE_FEE_PER_TX;
+  const voucherDiscountPerTx = Math.max(
     0,
-    Math.min(maxAllowedVoucher, Math.round(input.voucherDiscount))
+    Math.min(maxVoucherPerTx, Math.round(input.voucherDiscount))
   );
 
-  if (modalBeli <= 0 || totalGram <= 0) {
+  const txCount = vaBonusSummary.totalTransactions;
+
+  if (modalBeliPerTx <= 0 || gramPerTx <= 0 || txCount <= 0) {
     return {
+      modalBeliPerTx,
+      voucherDiscountPerTx,
       modalBeli: 0,
       totalGram: 0,
       voucherDiscount: 0,
@@ -176,6 +186,7 @@ export function calculateTringCuan(
       netModal: 0,
       buybackValue: 0,
       netProfit: 0,
+      netProfitPerTx: 0,
       roiPercentage: 0,
       spreadPerGram: buyPrice - buybackPrice,
       spreadPercentage: ((buyPrice - buybackPrice) / buyPrice) * 100,
@@ -183,12 +194,18 @@ export function calculateTringCuan(
       isProfitable: false,
       isValid: false,
       validationMessage:
-        "Masukkan nominal pembelian Rupiah atau berat gram emas di atas 0 untuk melihat hasil audit cuan.",
+        txCount <= 0
+          ? "Masukkan minimal 1x Jumlah Transaksi pada metode pembayaran VA di bawah."
+          : "Masukkan nominal pembelian Rupiah atau berat gram emas di atas 0 untuk melihat hasil audit cuan.",
     };
   }
 
-  // Dari awal setiap transaksi dikenakan Biaya Layanan VA Rp2.500:
-  // Tagihan Awal VA = Modal Beli + Biaya Layanan VA Awal (2.500/tx) - Total Voucher
+  // Kalikan seluruh komponen per 1x transaksi dengan total frekuensi transaksi VA (txCount)
+  const modalBeli = modalBeliPerTx * txCount;
+  const totalGram = gramPerTx * txCount;
+  const voucherDiscount = voucherDiscountPerTx * txCount;
+
+  // Tagihan Awal VA = Total Modal Beli + Total Biaya Layanan VA Awal (2.500 x txCount) - Total Voucher
   const tagihanAwalVa = Math.max(
     0,
     modalBeli + vaBonusSummary.initialServiceFee - voucherDiscount
@@ -199,12 +216,15 @@ export function calculateTringCuan(
     : 0;
   const voucherGoldPortion = Math.max(0, voucherDiscount - voucherFeePortion);
 
-  // Ketika bayar via VA Bank Digital, terpotong lagi Rp2.500/tx (gratis admin transfer):
-  // - Jika Voucher Memotong Biaya Layanan (Ya) + Bayar via Bank Digital -> hemat ekstra +Rp2.500/tx menjadi Cuan Tambahan!
-  // - Jika Voucher TIDAK Memotong Biaya Layanan (Tidak) + Bayar via Bank Digital -> Rp2.500 hanya menutup biaya layanan awal (bukan cuan tambahan).
+  // Total Transfer Bersih (Net Modal) setelah dipotong gratis admin Bank Digital (2.500 x digitalBankCount)
   const netModal = Math.max(0, tagihanAwalVa - vaBonusSummary.totalVaBonus);
-  const buybackValue = Math.round(totalGram * buybackPrice);
+
+  // Nilai buyback dihitung per transaksi lalu dikalikan txCount agar konsisten dengan pembulatan per transaksi
+  const buybackPerTx = Math.round(gramPerTx * buybackPrice);
+  const buybackValue = buybackPerTx * txCount;
+
   const netProfit = buybackValue - netModal;
+  const netProfitPerTx = Math.round(netProfit / txCount);
   const roiPercentage = netModal > 0 ? (netProfit / netModal) * 100 : 0;
 
   const spreadPerGram = buyPrice - buybackPrice;
@@ -218,6 +238,8 @@ export function calculateTringCuan(
   );
 
   return {
+    modalBeliPerTx,
+    voucherDiscountPerTx,
     modalBeli,
     totalGram,
     voucherDiscount,
@@ -229,6 +251,7 @@ export function calculateTringCuan(
     netModal,
     buybackValue,
     netProfit,
+    netProfitPerTx,
     roiPercentage,
     spreadPerGram,
     spreadPercentage,

@@ -28,12 +28,35 @@ describe("calculatePaymentVaBonus", () => {
       ],
       false
     );
-    // 3x Digital saves 7.500 out of 12.500 initial fee -> net effect -5.000 (from the 2x conventional bank)
     expect(summaryNo.netServiceEffect).toBe(-5000);
   });
 });
 
 describe("calculateTringCuan", () => {
+  it("multiplies per-transaction modal, voucher, and profit by 4x when 4x VA transactions are entered (9.115 x 4 = 36.460)", () => {
+    const result = calculateTringCuan({
+      inputMode: "rupiah",
+      nominalInput: 25000,
+      gramInput: 0,
+      voucherDiscount: 10000,
+      voucherCoversServiceFee: false,
+      buyPricePerGram: 2430000,
+      buybackPricePerGram: 2344000,
+      paymentRows: [{ id: "1", method: "VA_DIGITAL", frequency: 4 }],
+    });
+
+    expect(result.modalBeliPerTx).toBe(25000);
+    expect(result.voucherDiscountPerTx).toBe(10000);
+    expect(result.modalBeli).toBe(100000); // 25.000 x 4
+    expect(result.voucherDiscount).toBe(40000); // 10.000 x 4
+    expect(result.vaBonusSummary.initialServiceFee).toBe(10000); // 2.500 x 4
+    expect(result.tagihanAwalVa).toBe(70000); // 100.000 + 10.000 - 40.000
+    expect(result.netModal).toBe(60000); // 70.000 - 10.000 (15.000 x 4)
+    expect(result.buybackValue).toBe(96460); // 24.115 x 4
+    expect(result.netProfit).toBe(36460); // +Rp36.460 (9.115 x 4)
+    expect(result.netProfitPerTx).toBe(9115);
+  });
+
   it("matches exact user example 1: Beli 25k, Voucher 15k (12.5k + 2.5k fee) -> Tagihan Awal 12.500 -> via Bank Digital transfer 10.000", () => {
     const result = calculateTringCuan({
       inputMode: "rupiah",
@@ -82,21 +105,5 @@ describe("calculateTringCuan", () => {
 
     expect(viaConventional.tagihanAwalVa).toBe(27500);
     expect(viaConventional.netModal).toBe(27500);
-  });
-
-  it("matches exact user example 3: Beli 25k, Voucher 10k tidak potong biaya layanan -> Tagihan Awal 17.500 -> via Bank Digital transfer 15.000", () => {
-    const result = calculateTringCuan({
-      inputMode: "rupiah",
-      nominalInput: 25000,
-      gramInput: 0,
-      voucherDiscount: 10000,
-      voucherCoversServiceFee: false,
-      buyPricePerGram: 1545000,
-      buybackPricePerGram: 1495000,
-      paymentRows: [{ id: "1", method: "VA_DIGITAL", frequency: 1 }],
-    });
-
-    expect(result.tagihanAwalVa).toBe(17500);
-    expect(result.netModal).toBe(15000);
   });
 });

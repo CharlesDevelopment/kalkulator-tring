@@ -169,6 +169,12 @@ export function ResultSummary({
           <p className="mt-2 font-mono text-2xl font-bold tabular-nums sm:text-3xl">
             {formatSignedRupiah(result.netProfit)}
           </p>
+          {result.vaBonusSummary.totalTransactions > 1 && (
+            <p className="mt-0.5 font-mono text-xs font-bold tabular-nums opacity-90">
+              ({formatSignedRupiah(result.netProfitPerTx)} / transaksi ×{" "}
+              {result.vaBonusSummary.totalTransactions}x transaksi)
+            </p>
+          )}
 
           <p className="mt-1.5 text-xs font-medium opacity-95">
             {result.isProfitable
@@ -229,7 +235,16 @@ export function ResultSummary({
 
           <dl className="divide-y divide-border rounded-md border border-border bg-background text-sm">
             <div className="flex items-center justify-between px-3.5 py-2.5">
-              <dt className="text-muted">Modal Awal Pembelian Emas</dt>
+              <div>
+                <dt className="text-muted">
+                  Modal Awal Pembelian Emas ({result.vaBonusSummary.totalTransactions}x)
+                </dt>
+                {result.vaBonusSummary.totalTransactions > 1 && (
+                  <span className="block font-mono text-[11px] tabular-nums text-muted">
+                    {result.vaBonusSummary.totalTransactions}x × {formatRupiah(result.modalBeliPerTx)}
+                  </span>
+                )}
+              </div>
               <dd className="font-mono font-semibold tabular-nums text-foreground">
                 {formatRupiah(result.modalBeli)}
               </dd>
@@ -251,10 +266,15 @@ export function ResultSummary({
 
             <div className="flex items-center justify-between px-3.5 py-2.5">
               <div>
-                <dt className="text-muted">Total Potongan Voucher</dt>
+                <dt className="text-muted">
+                  Total Potongan Voucher ({result.vaBonusSummary.totalTransactions}x)
+                </dt>
                 <span className="block text-[11px] text-muted">
+                  {result.vaBonusSummary.totalTransactions > 1
+                    ? `${result.vaBonusSummary.totalTransactions}x × ${formatRupiah(result.voucherDiscountPerTx)} · `
+                    : ""}
                   {result.voucherCoversServiceFee
-                    ? `Termasuk potong Biaya Layanan ${formatRupiah(result.voucherFeePortion)} + Emas ${formatRupiah(result.voucherGoldPortion)}`
+                    ? `Potong Biaya Layanan ${formatRupiah(result.voucherFeePortion)} + Emas ${formatRupiah(result.voucherGoldPortion)}`
                     : "Voucher tidak memotong biaya layanan VA"}
                 </span>
               </div>

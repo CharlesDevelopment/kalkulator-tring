@@ -99,7 +99,7 @@ export function CalculatorForm({
         <div className="space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Label htmlFor="purchase-primary-input">
-              1. Satuan Input Pembelian Emas
+              1. Nominal Pembelian Emas (per 1x Transaksi)
             </Label>
             <div
               role="group"
@@ -218,7 +218,7 @@ export function CalculatorForm({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="voucher-discount-input">
-                2. Total Potongan Voucher / Cashback (Rp)
+                2. Potongan Voucher / Cashback (per 1x Transaksi)
               </Label>
               {effectiveModal > 0 && voucherDiscount > 0 && (
                 <span className="font-mono text-xs font-semibold tabular-nums text-profit-text">
