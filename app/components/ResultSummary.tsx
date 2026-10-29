@@ -44,7 +44,7 @@ export function ResultSummary({
       `1. Modal Awal Pembelian: ${formatRupiah(result.modalBeli)}`,
       `2. Total Emas Diperoleh: ${formatGram(result.totalGram)}`,
       `3. Total Hemat Voucher: -${formatRupiah(result.voucherDiscount)}`,
-      `4. Total Biaya Admin VA: +${formatRupiah(result.adminFeeSummary.totalAdminFee)} (${result.adminFeeSummary.formulaText})`,
+      `4. Tambahan Cuan VA Bank Digital: +${formatRupiah(result.vaBonusSummary.totalVaBonus)} (${result.vaBonusSummary.formulaText})`,
       `5. Total Pengeluaran Bersih (Net Modal): ${formatRupiah(result.netModal)}`,
       `6. Proyeksi Uang Diterima (Langsung Buyback): ${formatRupiah(result.buybackValue)}`,
       `7. Selisih Bersih (Net Cuan/Rugi): ${formatSignedRupiah(result.netProfit)}`,
@@ -170,7 +170,7 @@ export function ResultSummary({
 
           <p className="mt-1.5 text-xs font-medium opacity-95">
             {result.isProfitable
-              ? `Potongan voucher berhasil menutup selisih spread harga emas dan biaya admin VA dengan keuntungan bersih ${formatRupiah(result.netProfit)}.`
+              ? `Kombinasi voucher dan bonus free admin VA Bank Digital berhasil menutup spread harga emas dengan keuntungan bersih ${formatRupiah(result.netProfit)}.`
               : `Dibutuhkan minimal voucher ${formatRupiah(result.breakEvenVoucher)} (kurang ${formatRupiah(Math.max(0, result.breakEvenVoucher - result.voucherDiscount))} lagi) untuk mencapai titik impas (Rp0).`}
           </p>
         </div>
@@ -247,13 +247,15 @@ export function ResultSummary({
 
             <div className="flex items-center justify-between px-3.5 py-2.5">
               <div>
-                <dt className="text-muted">Total Biaya Admin VA</dt>
+                <dt className="text-muted">
+                  Tambahan Cuan VA Bayar Via Bank Digital
+                </dt>
                 <span className="block font-mono text-[11px] tabular-nums text-muted">
-                  {result.adminFeeSummary.formulaText}
+                  {result.vaBonusSummary.formulaText}
                 </span>
               </div>
-              <dd className="font-mono font-semibold tabular-nums text-loss-text">
-                +{formatRupiah(result.adminFeeSummary.totalAdminFee)}
+              <dd className="font-mono font-semibold tabular-nums text-profit-text">
+                +{formatRupiah(result.vaBonusSummary.totalVaBonus)}
               </dd>
             </div>
 
@@ -263,7 +265,7 @@ export function ResultSummary({
                   Total Pengeluaran Bersih (Net Modal)
                 </dt>
                 <span className="block text-[11px] text-muted">
-                  (Modal Beli - Voucher) + Biaya Admin VA
+                  Modal Beli - Voucher - Hemat Admin VA Bank Digital
                 </span>
               </div>
               <dd className="font-mono text-base font-bold tabular-nums text-foreground">

@@ -10,7 +10,7 @@ import {
   InputMode,
   PaymentMethodType,
   PaymentTransactionRow,
-  calculatePaymentAdminFees,
+  calculatePaymentVaBonus,
   calculateTringCuan,
 } from "@/app/lib/calculator";
 
@@ -25,9 +25,9 @@ const INITIAL_PAYMENT_ROWS: PaymentTransactionRow[] = [
     frequency: 2,
   },
   {
-    id: "row-other-1",
-    method: "VA_OTHER",
-    label: "VA BRI (Bank Lain)",
+    id: "row-digital-1",
+    method: "VA_DIGITAL",
+    label: "Seabank / Bank Digital",
     frequency: 3,
   },
 ];
@@ -120,8 +120,8 @@ export default function HomePage() {
   }, [fetchRealtimePrice]);
 
   const handleAddPaymentRow = (
-    method: PaymentMethodType = "VA_OTHER",
-    label = "VA Bank Lain",
+    method: PaymentMethodType = "VA_DIGITAL",
+    label = "Seabank / Bank Digital",
     frequency = 1
   ) => {
     const newId = `va-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -144,7 +144,7 @@ export default function HomePage() {
     setPaymentRows((prev) => prev.filter((row) => row.id !== id));
   };
 
-  const handleApplyPresetSplit = (bcaFreq: number, otherFreq: number) => {
+  const handleApplyPresetSplit = (bcaFreq: number, digitalFreq: number) => {
     setPaymentRows([
       {
         id: "preset-bca",
@@ -153,10 +153,10 @@ export default function HomePage() {
         frequency: bcaFreq,
       },
       {
-        id: "preset-other",
-        method: "VA_OTHER",
-        label: "VA BRI (Bank Lain)",
-        frequency: otherFreq,
+        id: "preset-digital",
+        method: "VA_DIGITAL",
+        label: "Seabank / Bank Digital",
+        frequency: digitalFreq,
       },
     ]);
   };
@@ -168,16 +168,16 @@ export default function HomePage() {
     setVoucherDiscount(0);
     setPaymentRows([
       {
-        id: "reset-bca",
-        method: "VA_BCA",
-        label: "VA BCA",
+        id: "reset-digital",
+        method: "VA_DIGITAL",
+        label: "Seabank / Bank Digital",
         frequency: 1,
       },
     ]);
   };
 
   const paymentSummary = useMemo(
-    () => calculatePaymentAdminFees(paymentRows),
+    () => calculatePaymentVaBonus(paymentRows),
     [paymentRows]
   );
 
@@ -218,7 +218,7 @@ export default function HomePage() {
                 Tring! Cuan Analyzer
               </h1>
               <p className="text-xs text-muted">
-                Kalkulator Audit Emas, Voucher & Biaya Multi-VA Pegadaian
+                Kalkulator Audit Emas, Voucher & Multi-VA Bank Digital Pegadaian
               </p>
             </div>
           </div>
@@ -308,10 +308,10 @@ export default function HomePage() {
       <footer className="mt-10 border-t border-border bg-surface py-4">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-2 px-4 text-xs text-muted sm:flex-row sm:items-center sm:px-6 lg:px-8">
           <p>
-            Alat bantu simulasi independen untuk menghitung selisih beli, voucher promo, biaya admin VA, dan buyback emas Tring! by Pegadaian.
+            Alat bantu simulasi independen untuk menghitung selisih beli, voucher promo, cuan free admin VA Bank Digital, dan buyback emas Tring! by Pegadaian.
           </p>
           <p className="font-mono tabular-nums">
-            Biaya VA BCA: Rp0 · VA Bank Lain: Rp2.500/transaksi
+            VA BCA: Tetap (Rp0) · VA Bayar Via Bank Digital: +Rp2.500 Cuan/transaksi
           </p>
         </div>
       </footer>

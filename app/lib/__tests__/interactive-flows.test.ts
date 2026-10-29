@@ -7,20 +7,21 @@ import { CalculatorForm } from "@/app/components/CalculatorForm";
 import { ResultSummary } from "@/app/components/ResultSummary";
 import { PaymentBreakdown } from "@/app/components/PaymentBreakdown";
 import {
-  calculatePaymentAdminFees,
+  calculatePaymentVaBonus,
   calculateTringCuan,
   PaymentTransactionRow,
 } from "../calculator";
 
 describe("UI Components & Interactive Flows Verification", () => {
-  it("renders initial HomePage with default 2x BCA + 3x BRI scenario and positive cuan", () => {
+  it("renders initial HomePage with default 2x BCA + 3x Bank Digital scenario and positive cuan", () => {
     const html = renderToStaticMarkup(React.createElement(HomePage));
     expect(html).toContain("Tring! Cuan Analyzer");
     expect(html).toContain("Kurs Emas Tring! by Pegadaian");
     expect(html).toContain("Parameter Pembelian &amp; Voucher");
     expect(html).toContain("Struk Audit Cuan &amp; Buyback");
-    expect(html).toContain("(2 x Rp0) + (3 x Rp2.500)");
-    expect(html).toContain("Rp7.500");
+    expect(html).toContain("VA Bayar Via Bank Digital (+Rp2.500 Cuan)");
+    expect(html).toContain("(2 x Rp0) + (3 x +Rp2.500)");
+    expect(html).toContain("+Rp7.500");
   });
 
   it("verifies PriceCard states: loading, live, fallback, and manual override", () => {
@@ -84,7 +85,7 @@ describe("UI Components & Interactive Flows Verification", () => {
 
   it("verifies PaymentBreakdown empty state and multi-row VA calculation", () => {
     const noop = () => {};
-    const emptySummary = calculatePaymentAdminFees([]);
+    const emptySummary = calculatePaymentVaBonus([]);
     const emptyHtml = renderToStaticMarkup(
       React.createElement(PaymentBreakdown, {
         rows: [],
@@ -98,14 +99,19 @@ describe("UI Components & Interactive Flows Verification", () => {
     expect(emptyHtml).toContain(
       "Belum ada rincian metode pembayaran Virtual Account."
     );
+    expect(emptyHtml).toContain("Tambah VA Bank Digital (+Rp2.500)");
     expect(emptyHtml).toContain("Tambah VA BCA (Rp0)");
-    expect(emptyHtml).toContain("Tambah VA Bank Lain (+Rp2.500)");
   });
 
   it("verifies ResultSummary empty state, profit state, and loss state", () => {
     const rows: PaymentTransactionRow[] = [
       { id: "1", method: "VA_BCA", label: "VA BCA", frequency: 2 },
-      { id: "2", method: "VA_OTHER", label: "VA BRI", frequency: 3 },
+      {
+        id: "2",
+        method: "VA_DIGITAL",
+        label: "Seabank / Bank Digital",
+        frequency: 3,
+      },
     ];
 
     const emptyResult = calculateTringCuan({
@@ -168,7 +174,7 @@ describe("UI Components & Interactive Flows Verification", () => {
     const rows: PaymentTransactionRow[] = [
       { id: "1", method: "VA_BCA", label: "VA BCA", frequency: 1 },
     ];
-    const summary = calculatePaymentAdminFees(rows);
+    const summary = calculatePaymentVaBonus(rows);
 
     const gramModeHtml = renderToStaticMarkup(
       React.createElement(CalculatorForm, {

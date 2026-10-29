@@ -1,6 +1,6 @@
 export type InputMode = "rupiah" | "gram";
 
-export type PaymentMethodType = "VA_BCA" | "VA_OTHER";
+export type PaymentMethodType = "VA_BCA" | "VA_DIGITAL";
 
 export interface PaymentTransactionRow {
   id: string;
@@ -19,11 +19,11 @@ export interface TringCalculationInput {
   paymentRows: PaymentTransactionRow[];
 }
 
-export interface PaymentFeeSummary {
+export interface PaymentBonusSummary {
   totalTransactions: number;
   bcaCount: number;
-  otherBankCount: number;
-  totalAdminFee: number;
+  digitalBankCount: number;
+  totalVaBonus: number;
   formulaText: string;
 }
 
@@ -31,7 +31,7 @@ export interface TringCalculationResult {
   modalBeli: number;
   totalGram: number;
   voucherDiscount: number;
-  adminFeeSummary: PaymentFeeSummary;
+  vaBonusSummary: PaymentBonusSummary;
   netModal: number;
   buybackValue: number;
   netProfit: number;
@@ -44,46 +44,49 @@ export interface TringCalculationResult {
   validationMessage: string | null;
 }
 
-export const VA_FEE_RATES: Record<PaymentMethodType, number> = {
+export const VA_BONUS_RATES: Record<PaymentMethodType, number> = {
   VA_BCA: 0,
-  VA_OTHER: 2500,
+  VA_DIGITAL: 2500,
 };
 
-export function calculatePaymentAdminFees(
+export function calculatePaymentVaBonus(
   rows: PaymentTransactionRow[]
-): PaymentFeeSummary {
+): PaymentBonusSummary {
   let bcaCount = 0;
-  let otherBankCount = 0;
+  let digitalBankCount = 0;
 
   for (const row of rows) {
-    const freq = Math.max(0, Math.floor(Number.isFinite(row.frequency) ? row.frequency : 0));
+    const freq = Math.max(
+      0,
+      Math.floor(Number.isFinite(row.frequency) ? row.frequency : 0)
+    );
     if (row.method === "VA_BCA") {
       bcaCount += freq;
     } else {
-      otherBankCount += freq;
+      digitalBankCount += freq;
     }
   }
 
-  const totalAdminFee =
-    bcaCount * VA_FEE_RATES.VA_BCA + otherBankCount * VA_FEE_RATES.VA_OTHER;
-  const totalTransactions = bcaCount + otherBankCount;
+  const totalVaBonus =
+    bcaCount * VA_BONUS_RATES.VA_BCA +
+    digitalBankCount * VA_BONUS_RATES.VA_DIGITAL;
+  const totalTransactions = bcaCount + digitalBankCount;
 
   const parts: string[] = [];
-  if (bcaCount > 0 || otherBankCount === 0) {
+  if (bcaCount > 0 || digitalBankCount === 0) {
     parts.push(`(${bcaCount} x Rp0)`);
   }
-  if (otherBankCount > 0) {
-    parts.push(`(${otherBankCount} x Rp2.500)`);
+  if (digitalBankCount > 0) {
+    parts.push(`(${digitalBankCount} x +Rp2.500)`);
   }
 
-  const formulaText =
-    parts.length > 0 ? parts.join(" + ") : "(0 x Rp0)";
+  const formulaText = parts.length > 0 ? parts.join(" + ") : "(0 x Rp0)";
 
   return {
     totalTransactions,
     bcaCount,
-    otherBankCount,
-    totalAdminFee,
+    digitalBankCount,
+    totalVaBonus,
     formulaText,
   };
 }
@@ -91,8 +94,10 @@ export function calculatePaymentAdminFees(
 export function calculateTringCuan(
   input: TringCalculationInput
 ): TringCalculationResult {
-  const adminFeeSummary = calculatePaymentAdminFees(input.paymentRows);
-  const buyPrice = Number.isFinite(input.buyPricePerGram) ? input.buyPricePerGram : 0;
+  const vaBonusSummary = calculatePaymentVaBonus(input.paymentRows);
+  const buyPrice = Number.isFinite(input.buyPricePerGram)
+    ? input.buyPricePerGram
+    : 0;
   const buybackPrice = Number.isFinite(input.buybackPricePerGram)
     ? input.buybackPricePerGram
     : 0;
@@ -102,7 +107,7 @@ export function calculateTringCuan(
       modalBeli: 0,
       totalGram: 0,
       voucherDiscount: 0,
-      adminFeeSummary,
+      vaBonusSummary,
       netModal: 0,
       buybackValue: 0,
       netProfit: 0,
@@ -138,14 +143,14 @@ export function calculateTringCuan(
       modalBeli: 0,
       totalGram: 0,
       voucherDiscount: 0,
-      adminFeeSummary,
-      netModal: adminFeeSummary.totalAdminFee,
+      vaBonusSummary,
+      netModal: 0,
       buybackValue: 0,
-      netProfit: -adminFeeSummary.totalAdminFee,
+      netProfit: 0,
       roiPercentage: 0,
       spreadPerGram: buyPrice - buybackPrice,
       spreadPercentage: ((buyPrice - buybackPrice) / buyPrice) * 100,
-      breakEvenVoucher: adminFeeSummary.totalAdminFee,
+      breakEvenVoucher: 0,
       isProfitable: false,
       isValid: false,
       validationMessage:
@@ -153,7 +158,11 @@ export function calculateTringCuan(
     };
   }
 
-  const netModal = modalBeli - voucherDiscount + adminFeeSummary.totalAdminFee;
+  // VA Bayar Via Bank Digital memberikan hemat free admin +Rp2.500/transaksi sehingga mengurangi Net Modal (menambah Net Cuan +Rp2.500/transaksi)
+  const netModal = Math.max(
+    0,
+    modalBeli - voucherDiscount - vaBonusSummary.totalVaBonus
+  );
   const buybackValue = Math.round(totalGram * buybackPrice);
   const netProfit = buybackValue - netModal;
   const roiPercentage = netModal > 0 ? (netProfit / netModal) * 100 : 0;
@@ -162,14 +171,14 @@ export function calculateTringCuan(
   const spreadPercentage = (spreadPerGram / buyPrice) * 100;
   const breakEvenVoucher = Math.max(
     0,
-    modalBeli - buybackValue + adminFeeSummary.totalAdminFee
+    modalBeli - buybackValue - vaBonusSummary.totalVaBonus
   );
 
   return {
     modalBeli,
     totalGram,
     voucherDiscount,
-    adminFeeSummary,
+    vaBonusSummary,
     netModal,
     buybackValue,
     netProfit,

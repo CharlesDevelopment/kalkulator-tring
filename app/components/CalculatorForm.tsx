@@ -10,7 +10,7 @@ import {
   InputMode,
   PaymentMethodType,
   PaymentTransactionRow,
-  PaymentFeeSummary,
+  PaymentBonusSummary,
 } from "@/app/lib/calculator";
 import {
   formatRupiah,
@@ -27,7 +27,7 @@ export interface CalculatorFormProps {
   voucherDiscount: number;
   buyPrice: number;
   paymentRows: PaymentTransactionRow[];
-  paymentSummary: PaymentFeeSummary;
+  paymentSummary: PaymentBonusSummary;
   onChangeInputMode: (mode: InputMode) => void;
   onChangeNominal: (value: number) => void;
   onChangeGram: (value: string) => void;
