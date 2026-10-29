@@ -10,10 +10,10 @@ export interface StoredPriceSettings {
 export const LOCAL_PRICE_STORAGE_KEY = "tring-local-price-override-v1";
 
 export const DEFAULT_PRICE_SETTINGS: StoredPriceSettings = {
-  buyPricePerGram: 1545000,
-  buybackPricePerGram: 1495000,
+  buyPricePerGram: 2343000,
+  buybackPricePerGram: 2344000,
   unitMode: "0.01g",
-  updatedAt: "2026-10-29T16:40:00.000Z",
+  updatedAt: "2026-10-30T00:21:16.000Z",
 };
 
 export function loadLocalPriceOverride(): StoredPriceSettings | null {

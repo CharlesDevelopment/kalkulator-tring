@@ -202,11 +202,16 @@ export default function SettingsPage() {
               )}
             </Button>
 
-            <Button asChild variant="default" size="sm">
-              <Link href="/">
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                <span>Kembali ke Kalkulator</span>
-              </Link>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={() => {
+                window.location.href = "/";
+              }}
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <span>Kembali ke Kalkulator</span>
             </Button>
           </div>
         </div>
@@ -270,12 +275,12 @@ export default function SettingsPage() {
                       Harga Universal berhasil diperbarui untuk semua perangkat!
                     </span>
                   </div>
-                  <Link
+                  <a
                     href="/"
                     className="underline font-bold whitespace-nowrap"
                   >
                     Buka Kalkulator
-                  </Link>
+                  </a>
                 </div>
               )}
 
