@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import HomePage from "@/app/page";
+import { CalculatorApp } from "@/app/components/CalculatorApp";
 import SettingsPage from "@/app/settings/page";
 import { PriceCard } from "@/app/components/PriceCard";
 import { CalculatorForm } from "@/app/components/CalculatorForm";
 import { ResultSummary } from "@/app/components/ResultSummary";
 import { PaymentBreakdown } from "@/app/components/PaymentBreakdown";
+import { DEFAULT_PRICE_SETTINGS } from "@/app/lib/price-storage";
 import {
   calculatePaymentVaBonus,
   calculateTringCuan,
@@ -15,7 +16,11 @@ import {
 
 describe("UI Components & Interactive Flows Verification", () => {
   it("renders HomePage WITHOUT /settings link and WITH Sesuaikan Harga Lokal button", () => {
-    const html = renderToStaticMarkup(React.createElement(HomePage));
+    const html = renderToStaticMarkup(
+      React.createElement(CalculatorApp, {
+        initialUniversalSettings: DEFAULT_PRICE_SETTINGS,
+      })
+    );
     expect(html).toContain("Tring! Cuan Analyzer");
     expect(html).not.toContain('href="/settings"');
     expect(html).toContain("Sesuaikan Harga Lokal");

@@ -109,6 +109,11 @@ export function calculatePaymentVaBonus(
   };
 }
 
+export function roundGoldGram(gram: number): number {
+  if (!Number.isFinite(gram) || gram <= 0) return 0;
+  return Math.round((gram + Number.EPSILON) * 10000) / 10000;
+}
+
 export function calculateTringCuan(
   input: TringCalculationInput
 ): TringCalculationResult {
@@ -158,10 +163,15 @@ export function calculateTringCuan(
       : Math.max(0, input.gramInput) * buyPrice;
 
   const modalBeliPerTx = Math.round(rawModalPerTx);
-  const gramPerTx =
+  const rawGramPerTx =
     input.inputMode === "gram"
       ? Math.max(0, input.gramInput)
-      : modalBeliPerTx / buyPrice;
+      : buyPrice > 0
+      ? modalBeliPerTx / buyPrice
+      : 0;
+
+  // Pegadaian Tring! membukukan saldo emas dengan presisi 4 desimal (0,0001 gram)
+  const gramPerTx = roundGoldGram(rawGramPerTx);
 
   const maxVoucherPerTx = modalBeliPerTx + VA_SERVICE_FEE_PER_TX;
   const voucherDiscountPerTx = Math.max(
@@ -202,7 +212,7 @@ export function calculateTringCuan(
 
   // Kalikan seluruh komponen per 1x transaksi dengan total frekuensi transaksi VA (txCount)
   const modalBeli = modalBeliPerTx * txCount;
-  const totalGram = gramPerTx * txCount;
+  const totalGram = roundGoldGram(gramPerTx * txCount);
   const voucherDiscount = voucherDiscountPerTx * txCount;
 
   // Tagihan Awal VA = Total Modal Beli + Total Biaya Layanan VA Awal (2.500 x txCount) - Total Voucher

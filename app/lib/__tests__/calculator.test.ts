@@ -33,7 +33,25 @@ describe("calculatePaymentVaBonus", () => {
 });
 
 describe("calculateTringCuan", () => {
-  it("multiplies per-transaction modal, voucher, and profit by 4x when 4x VA transactions are entered (9.115 x 4 = 36.460)", () => {
+  it("matches exact Tring! Pegadaian live screenshot: Beli 25k at 2.409.000/g yields 0.0104 g, buyback at 2.324.000/g yields Rp24.170", () => {
+    const result = calculateTringCuan({
+      inputMode: "rupiah",
+      nominalInput: 25000,
+      gramInput: 0,
+      voucherDiscount: 7500,
+      voucherCoversServiceFee: true,
+      buyPricePerGram: 2409000,
+      buybackPricePerGram: 2324000,
+      paymentRows: [{ id: "1", method: "VA_DIGITAL", frequency: 1 }],
+    });
+
+    expect(result.totalGram).toBe(0.0104);
+    expect(result.buybackValue).toBe(24170); // 0.0104 x 2.324.000 = 24.169,6 -> 24.170
+    expect(result.netModal).toBe(17500); // 25.000 + 2.500 - 7.500 - 2.500
+    expect(result.netProfit).toBe(6670); // 24.170 - 17.500 = +6.670
+  });
+
+  it("multiplies per-transaction modal, voucher, and profit by 4x with 4-decimal precision", () => {
     const result = calculateTringCuan({
       inputMode: "rupiah",
       nominalInput: 25000,
@@ -52,9 +70,10 @@ describe("calculateTringCuan", () => {
     expect(result.vaBonusSummary.initialServiceFee).toBe(10000); // 2.500 x 4
     expect(result.tagihanAwalVa).toBe(70000); // 100.000 + 10.000 - 40.000
     expect(result.netModal).toBe(60000); // 70.000 - 10.000 (15.000 x 4)
-    expect(result.buybackValue).toBe(96460); // 24.115 x 4
-    expect(result.netProfit).toBe(36460); // +Rp36.460 (9.115 x 4)
-    expect(result.netProfitPerTx).toBe(9115);
+    expect(result.totalGram).toBe(0.0412); // 0.0103 x 4
+    expect(result.buybackValue).toBe(96572); // 24.143 x 4
+    expect(result.netProfit).toBe(36572); // +Rp36.572 (9.143 x 4)
+    expect(result.netProfitPerTx).toBe(9143);
   });
 
   it("matches exact user example 1: Beli 25k, Voucher 15k (12.5k + 2.5k fee) -> Tagihan Awal 12.500 -> via Bank Digital transfer 10.000", () => {

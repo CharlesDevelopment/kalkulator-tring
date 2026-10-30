@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/ca
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import { InputMode, PaymentBonusSummary } from "@/app/lib/calculator";
+import { InputMode, PaymentBonusSummary, roundGoldGram } from "@/app/lib/calculator";
 import {
   formatRupiah,
   formatGram,
@@ -65,9 +65,9 @@ export function CalculatorForm({
       : Math.round(Math.max(0, parsedGram) * buyPrice);
   const effectiveGram =
     inputMode === "gram"
-      ? Math.max(0, parsedGram)
+      ? roundGoldGram(Math.max(0, parsedGram))
       : buyPrice > 0
-      ? nominalInput / buyPrice
+      ? roundGoldGram(nominalInput / buyPrice)
       : 0;
 
   return (
