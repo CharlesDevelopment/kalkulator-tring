@@ -28,6 +28,7 @@ describe("UI Components & Interactive Flows Verification", () => {
     expect(html).toContain("Apakah voucher memotong biaya layanan VA (Rp2.500)?");
     expect(html).toContain("VA Bayar Via Bank Digital");
     expect(html).toContain("VA Bayar melalui Bank");
+    expect(html).toContain("Menunggu Input Nominal Transaksi");
     expect(html).toContain("Disclaimer");
     expect(html).toContain("bisa saja tidak sepenuhnya akurat");
   });

@@ -39,9 +39,9 @@ export function CalculatorApp({
   );
 
   const [inputMode, setInputMode] = useState<InputMode>("rupiah");
-  const [nominalInput, setNominalInput] = useState<number>(25000);
-  const [gramInput, setGramInput] = useState<string>("0.05");
-  const [voucherDiscount, setVoucherDiscount] = useState<number>(10000);
+  const [nominalInput, setNominalInput] = useState<number>(0);
+  const [gramInput, setGramInput] = useState<string>("0");
+  const [voucherDiscount, setVoucherDiscount] = useState<number>(0);
   const [voucherCoversServiceFee, setVoucherCoversServiceFee] =
     useState<boolean>(true);
   const [digitalBankCount, setDigitalBankCount] = useState<number>(1);

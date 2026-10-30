@@ -144,7 +144,7 @@ export function CalculatorForm({
                   type="text"
                   inputMode="numeric"
                   className="pl-10 text-lg font-bold"
-                  placeholder="Masukkan nominal pembelian, contoh: 25.000"
+                  placeholder="0"
                   value={formatThousandSeparator(nominalInput)}
                   onChange={(e) =>
                     onChangeNominal(parseDigitsToNumber(e.target.value))
@@ -182,8 +182,8 @@ export function CalculatorForm({
                   min="0"
                   inputMode="decimal"
                   className="pr-16 text-lg font-bold"
-                  placeholder="Masukkan berat gram, contoh: 0.1"
-                  value={gramInput}
+                  placeholder="0"
+                  value={gramInput === "0" ? "" : gramInput}
                   onChange={(e) => onChangeGram(e.target.value)}
                 />
                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 font-mono text-sm font-bold text-muted">
@@ -240,7 +240,7 @@ export function CalculatorForm({
                 type="text"
                 inputMode="numeric"
                 className="pl-10 text-lg font-bold"
-                placeholder="Contoh: 10.000"
+                placeholder="0"
                 value={formatThousandSeparator(voucherDiscount)}
                 onChange={(e) =>
                   onChangeVoucher(parseDigitsToNumber(e.target.value))
