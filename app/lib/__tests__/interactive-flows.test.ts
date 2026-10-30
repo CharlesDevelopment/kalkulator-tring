@@ -28,6 +28,8 @@ describe("UI Components & Interactive Flows Verification", () => {
     expect(html).toContain("Apakah voucher memotong biaya layanan VA (Rp2.500)?");
     expect(html).toContain("VA Bayar Via Bank Digital");
     expect(html).toContain("VA Bayar melalui Bank");
+    expect(html).toContain("Disclaimer");
+    expect(html).toContain("bisa saja tidak sepenuhnya akurat");
   });
 
   it("renders SettingsPage (/settings) with Admin Password field and Universal Price controls", () => {
@@ -115,6 +117,7 @@ describe("UI Components & Interactive Flows Verification", () => {
     expect(html).toContain("Tagihan VA Sebelum Transfer Bank");
     expect(html).toContain("Rp17.500");
     expect(html).toContain("Rp15.000");
+    expect(html).toContain("Disclaimer:");
   });
 
   it("verifies CalculatorForm in Gram mode", () => {

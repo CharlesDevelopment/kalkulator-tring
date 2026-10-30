@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
-import { Scale, Sun, Moon } from "lucide-react";
+import { Scale, Sun, Moon, AlertTriangle } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { PriceCard } from "@/app/components/PriceCard";
 import { CalculatorForm } from "@/app/components/CalculatorForm";
@@ -293,6 +293,25 @@ export function CalculatorApp({
               buyPrice={buyPrice}
               buybackPrice={buybackPrice}
             />
+          </div>
+        </div>
+
+        {/* Disclaimer Banner */}
+        <div
+          role="note"
+          aria-label="Disclaimer akurasi kalkulator"
+          className="rounded-lg border border-warn-border bg-warn-bg p-4 text-xs text-warn-text shadow-sm"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-warn-text mt-0.5" aria-hidden="true" />
+            <div className="space-y-1">
+              <p className="font-bold uppercase tracking-wider text-[11px]">
+                Disclaimer & Batasan Simulasi
+              </p>
+              <p className="leading-relaxed">
+                Kalkulator ini merupakan alat simulasi independen untuk membantu perkiraan potensi cuan emas, voucher, dan biaya layanan. Hasil perhitungan <strong>bisa saja tidak sepenuhnya akurat atau memiliki sedikit selisih</strong> dibandingkan nominal riil di aplikasi Tring! by Pegadaian akibat pembulatan sistem, pembaruan kurs emas realtime saat eksekusi, serta perubahan ketentuan promo voucher atau biaya transfer perbankan. Selalu periksa kembali rincian transaksi final di aplikasi resmi Tring! Pegadaian sebelum bertransaksi.
+              </p>
+            </div>
           </div>
         </div>
       </main>

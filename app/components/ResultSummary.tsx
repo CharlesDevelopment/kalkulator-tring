@@ -8,6 +8,7 @@ import {
   Check,
   FileSpreadsheet,
   AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -50,6 +51,8 @@ export function ResultSummary({
       `7. Total Emas Diperoleh: ${formatGram(result.totalGram)}`,
       `8. Proyeksi Uang Diterima (Langsung Buyback): ${formatRupiah(result.buybackValue)}`,
       `9. Selisih Bersih (Net Cuan/Rugi): ${formatSignedRupiah(result.netProfit)}`,
+      `-------------------------------------------`,
+      `* Disclaimer: Hasil bersifat simulasi dan estimasi. Nilai riil di aplikasi Tring! Pegadaian bisa saja terdapat selisih pembulatan atau perubahan kurs realtime.`,
     ].join("\n");
 
     try {
@@ -372,6 +375,17 @@ export function ResultSummary({
               </dd>
             </div>
           </dl>
+
+          <div
+            role="note"
+            aria-label="Catatan disclaimer kalkulator"
+            className="flex items-start gap-2.5 rounded-md border border-warn-border bg-warn-bg/90 p-3 text-xs leading-relaxed text-warn-text"
+          >
+            <AlertTriangle className="h-4 w-4 shrink-0 text-warn-text mt-0.5" aria-hidden="true" />
+            <p>
+              <strong>Disclaimer:</strong> Kalkulator ini bersifat estimasi dan simulasi. Hasil riil pada aplikasi Tring! by Pegadaian bisa saja terdapat selisih akibat pembulatan internal sistem atau fluktuasi kurs emas realtime saat Anda mengeksekusi transaksi.
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
