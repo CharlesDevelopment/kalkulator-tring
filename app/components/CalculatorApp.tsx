@@ -265,7 +265,7 @@ export function CalculatorApp({
         />
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-12 lg:items-start">
-          <div className="lg:col-span-7">
+          <div className="min-w-0 lg:col-span-7">
             <CalculatorForm
               inputMode={inputMode}
               nominalInput={nominalInput}
@@ -287,7 +287,7 @@ export function CalculatorApp({
             />
           </div>
 
-          <div className="lg:col-span-5 lg:sticky lg:top-6">
+          <div className="min-w-0 lg:col-span-5 lg:sticky lg:top-6">
             <ResultSummary
               result={calculationResult}
               buyPrice={buyPrice}

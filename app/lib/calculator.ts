@@ -56,6 +56,11 @@ export interface TringCalculationResult {
 
 export const VA_SERVICE_FEE_PER_TX = 2500;
 
+export const MAX_NOMINAL_PURCHASE = 10_000_000_000; // Rp10 Miliar
+export const MAX_GRAM_PURCHASE = 10_000; // 10.000 gram (~Rp24 Miliar)
+export const MAX_TRANSACTIONS_COUNT = 1_000; // 1.000 transaksi
+export const MAX_PRICE_PER_GRAM = 100_000_000; // Rp100 Juta / gram
+
 export const VA_BONUS_RATES: Record<PaymentMethodType, number> = {
   VA_BCA: 0,
   VA_DIGITAL: 2500,
@@ -69,9 +74,10 @@ export function calculatePaymentVaBonus(
   let digitalBankCount = 0;
 
   for (const row of rows) {
-    const freq = Math.max(
-      0,
-      Math.floor(Number.isFinite(row.frequency) ? row.frequency : 0)
+    const rawFreq = Number.isFinite(row.frequency) ? row.frequency : 0;
+    const freq = Math.min(
+      MAX_TRANSACTIONS_COUNT,
+      Math.max(0, Math.floor(rawFreq))
     );
     if (row.method === "VA_BCA") {
       bcaCount += freq;
@@ -157,15 +163,27 @@ export function calculateTringCuan(
     };
   }
 
+  const clampedNominal = Math.min(
+    MAX_NOMINAL_PURCHASE,
+    Math.max(0, input.nominalInput)
+  );
+  const clampedGram = Math.min(
+    MAX_GRAM_PURCHASE,
+    Math.max(0, input.gramInput)
+  );
+
   const rawModalPerTx =
     input.inputMode === "rupiah"
-      ? Math.max(0, input.nominalInput)
-      : Math.max(0, input.gramInput) * buyPrice;
+      ? clampedNominal
+      : clampedGram * buyPrice;
 
-  const modalBeliPerTx = Math.round(rawModalPerTx);
+  const modalBeliPerTx = Math.min(
+    MAX_NOMINAL_PURCHASE,
+    Math.round(rawModalPerTx)
+  );
   const rawGramPerTx =
     input.inputMode === "gram"
-      ? Math.max(0, input.gramInput)
+      ? clampedGram
       : buyPrice > 0
       ? modalBeliPerTx / buyPrice
       : 0;

@@ -106,7 +106,7 @@ export function ResultSummary({
   );
 
   return (
-    <Card aria-label="Ringkasan Hasil Kalkulasi Cuan">
+    <Card aria-label="Ringkasan Hasil Kalkulasi Cuan" className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <div>
           <CardTitle className="flex items-center gap-2">
@@ -169,38 +169,38 @@ export function ResultSummary({
             </span>
           </div>
 
-          <p className="mt-2 font-mono text-2xl font-bold tabular-nums sm:text-3xl">
+          <p className="mt-2 font-mono text-2xl font-bold tabular-nums sm:text-3xl break-words [overflow-wrap:anywhere]">
             {formatSignedRupiah(result.netProfit)}
           </p>
           {result.vaBonusSummary.totalTransactions > 1 && (
-            <p className="mt-0.5 font-mono text-xs font-bold tabular-nums opacity-90">
+            <p className="mt-0.5 font-mono text-xs font-bold tabular-nums opacity-90 break-words [overflow-wrap:anywhere]">
               ({formatSignedRupiah(result.netProfitPerTx)} / transaksi ×{" "}
               {result.vaBonusSummary.totalTransactions}x transaksi)
             </p>
           )}
 
-          <p className="mt-1.5 text-xs font-medium opacity-95">
+          <p className="mt-1.5 text-xs font-medium opacity-95 break-words [overflow-wrap:anywhere]">
             {result.isProfitable
               ? `Kombinasi voucher dan metode pembayaran VA berhasil menutup spread harga emas dengan keuntungan bersih ${formatRupiah(result.netProfit)}.`
               : `Dibutuhkan minimal voucher ${formatRupiah(result.breakEvenVoucher)} (kurang ${formatRupiah(Math.max(0, result.breakEvenVoucher - result.voucherDiscount))} lagi) untuk mencapai titik impas (Rp0).`}
           </p>
         </div>
 
-        <div className="space-y-2.5 rounded-md border border-border bg-surface-subtle p-3.5">
-          <div className="flex items-center justify-between text-xs font-semibold">
+        <div className="space-y-2.5 rounded-md border border-border bg-surface-subtle p-3.5 overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-1 text-xs font-semibold">
             <span className="text-foreground">
               Pita Perbandingan Transfer Bersih vs Nilai Buyback
             </span>
-            <span className="font-mono tabular-nums text-muted">
+            <span className="font-mono tabular-nums text-muted break-words">
               Impas Voucher: {formatRupiah(result.breakEvenVoucher)}
             </span>
           </div>
 
           <div className="space-y-2">
             <div>
-              <div className="mb-1 flex justify-between text-xs">
-                <span className="text-muted">Total Transfer Bersih (Net Modal)</span>
-                <span className="font-mono font-bold tabular-nums text-foreground">
+              <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+                <span className="text-muted min-w-0">Total Transfer Bersih (Net Modal)</span>
+                <span className="font-mono font-bold tabular-nums text-foreground shrink-0 text-right">
                   {formatRupiah(result.netModal)}
                 </span>
               </div>
@@ -213,9 +213,9 @@ export function ResultSummary({
             </div>
 
             <div>
-              <div className="mb-1 flex justify-between text-xs">
-                <span className="text-muted">Hasil Penjualan (Buyback)</span>
-                <span className="font-mono font-bold tabular-nums text-foreground">
+              <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+                <span className="text-muted min-w-0">Hasil Penjualan (Buyback)</span>
+                <span className="font-mono font-bold tabular-nums text-foreground shrink-0 text-right">
                   {formatRupiah(result.buybackValue)}
                 </span>
               </div>
@@ -237,8 +237,8 @@ export function ResultSummary({
           </h3>
 
           <dl className="divide-y divide-border rounded-md border border-border bg-background text-sm">
-            <div className="flex items-center justify-between px-3.5 py-2.5">
-              <div>
+            <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 pr-1">
                 <dt className="text-muted">
                   Modal Awal Pembelian Emas ({result.vaBonusSummary.totalTransactions}x)
                 </dt>
@@ -248,13 +248,13 @@ export function ResultSummary({
                   </span>
                 )}
               </div>
-              <dd className="font-mono font-semibold tabular-nums text-foreground">
+              <dd className="shrink-0 text-right font-mono font-semibold tabular-nums text-foreground">
                 {formatRupiah(result.modalBeli)}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between px-3.5 py-2.5">
-              <div>
+            <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 pr-1">
                 <dt className="text-muted">
                   Biaya Layanan VA Awal ({result.vaBonusSummary.totalTransactions}x Rp2.500)
                 </dt>
@@ -262,13 +262,13 @@ export function ResultSummary({
                   Diterapkan dari awal pada setiap transaksi VA
                 </span>
               </div>
-              <dd className="font-mono font-semibold tabular-nums text-loss-text">
+              <dd className="shrink-0 text-right font-mono font-semibold tabular-nums text-loss-text">
                 +{formatRupiah(result.vaBonusSummary.initialServiceFee)}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between px-3.5 py-2.5">
-              <div>
+            <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 pr-1">
                 <dt className="text-muted">
                   Total Potongan Voucher ({result.vaBonusSummary.totalTransactions}x)
                 </dt>
@@ -281,13 +281,13 @@ export function ResultSummary({
                     : "Voucher tidak memotong biaya layanan VA"}
                 </span>
               </div>
-              <dd className="font-mono font-semibold tabular-nums text-profit-text">
+              <dd className="shrink-0 text-right font-mono font-semibold tabular-nums text-profit-text">
                 -{formatRupiah(result.voucherDiscount)}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between px-3.5 py-2.5">
-              <div>
+            <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 pr-1">
                 <dt className="font-medium text-foreground">
                   Tagihan VA Sebelum Transfer Bank
                 </dt>
@@ -295,13 +295,13 @@ export function ResultSummary({
                   Modal Beli + Biaya Layanan VA Awal - Voucher
                 </span>
               </div>
-              <dd className="font-mono font-semibold tabular-nums text-foreground">
+              <dd className="shrink-0 text-right font-mono font-semibold tabular-nums text-foreground">
                 {formatRupiah(result.tagihanAwalVa)}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between px-3.5 py-2.5">
-              <div>
+            <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 pr-1">
                 <dt className="text-muted">
                   Hemat Transfer via VA Bank Digital ({result.vaBonusSummary.digitalBankCount}x)
                 </dt>
@@ -311,13 +311,13 @@ export function ResultSummary({
                     : `Menutup biaya layanan VA awal (bukan cuan tambahan)`}
                 </span>
               </div>
-              <dd className="font-mono font-semibold tabular-nums text-profit-text">
+              <dd className="shrink-0 text-right font-mono font-semibold tabular-nums text-profit-text">
                 -{formatRupiah(result.vaBonusSummary.totalVaBonus)}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between bg-surface-subtle px-3.5 py-3">
-              <div>
+            <div className="flex items-center justify-between gap-3 bg-surface-subtle px-3.5 py-3">
+              <div className="min-w-0 pr-1">
                 <dt className="font-bold text-foreground">
                   Total Transfer Bersih (Net Modal)
                 </dt>
@@ -325,39 +325,39 @@ export function ResultSummary({
                   Nominal uang riil yang keluar dari rekening Anda
                 </span>
               </div>
-              <dd className="font-mono text-base font-bold tabular-nums text-foreground">
+              <dd className="shrink-0 text-right font-mono text-base font-bold tabular-nums text-foreground">
                 {formatRupiah(result.netModal)}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between px-3.5 py-2.5">
-              <div>
+            <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 pr-1">
                 <dt className="text-muted">Total Emas yang Diperoleh</dt>
-                <span className="block font-mono text-[11px] tabular-nums text-muted">
+                <span className="block font-mono text-[11px] tabular-nums text-muted break-words">
                   {formatRupiah(result.modalBeli)} / {formatRupiah(buyPrice)}
                 </span>
               </div>
-              <dd className="rounded border border-gold-border bg-gold-bg px-2 py-0.5 font-mono font-bold tabular-nums text-gold-text">
+              <dd className="shrink-0 rounded border border-gold-border bg-gold-bg px-2 py-0.5 font-mono font-bold tabular-nums text-gold-text">
                 {formatGram(result.totalGram)}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between px-3.5 py-2.5">
-              <div>
+            <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 pr-1">
                 <dt className="text-muted">
                   Proyeksi Uang Diterima (Langsung Buyback)
                 </dt>
-                <span className="block font-mono text-[11px] tabular-nums text-muted">
+                <span className="block font-mono text-[11px] tabular-nums text-muted break-words">
                   {formatGram(result.totalGram)} × {formatRupiah(buybackPrice)}
                 </span>
               </div>
-              <dd className="font-mono text-base font-bold tabular-nums text-foreground">
+              <dd className="shrink-0 text-right font-mono text-base font-bold tabular-nums text-foreground">
                 {formatRupiah(result.buybackValue)}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between bg-surface-subtle px-3.5 py-3">
-              <div>
+            <div className="flex items-center justify-between gap-3 bg-surface-subtle px-3.5 py-3">
+              <div className="min-w-0 pr-1">
                 <dt className="font-bold text-foreground">
                   Selisih Bersih (Net Cuan / Rugi)
                 </dt>
@@ -366,7 +366,7 @@ export function ResultSummary({
                 </span>
               </div>
               <dd
-                className={`font-mono text-base font-bold tabular-nums ${
+                className={`shrink-0 text-right font-mono text-base font-bold tabular-nums ${
                   result.isProfitable ? "text-profit-text" : "text-loss-text"
                 }`}
               >

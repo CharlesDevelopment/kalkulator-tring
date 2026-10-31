@@ -38,11 +38,19 @@ export function formatThousandSeparator(value: number): string {
   return numberFormatter.format(Math.round(value));
 }
 
-export function parseDigitsToNumber(raw: string): number {
+export const DEFAULT_MAX_DIGIT_LIMIT = 10_000_000_000; // Rp10 Miliar
+
+export function parseDigitsToNumber(
+  raw: string,
+  maxLimit: number = DEFAULT_MAX_DIGIT_LIMIT
+): number {
   const digits = raw.replace(/[^\d]/g, "");
   if (!digits) return 0;
-  const parsed = Number.parseInt(digits, 10);
-  return Number.isFinite(parsed) ? parsed : 0;
+  // Batasi hingga 11 digit angka untuk mencegah floating point overflow dan bug rentetan angka nol
+  const safeDigits = digits.slice(0, 11);
+  const parsed = Number.parseInt(safeDigits, 10);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.min(parsed, maxLimit);
 }
 
 export function formatGram(value: number): string {

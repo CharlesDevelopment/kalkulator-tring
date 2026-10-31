@@ -108,11 +108,11 @@ export function PaymentBreakdown({
                 min={0}
                 max={999}
                 inputMode="numeric"
-                value={digitalBankCount.toString()}
+                value={digitalBankCount === 0 ? "0" : digitalBankCount.toString()}
                 onChange={(e) => {
                   const val = Number.parseInt(e.target.value, 10);
                   onChangeDigitalBankCount(
-                    Number.isNaN(val) ? 0 : Math.max(0, val)
+                    Number.isNaN(val) ? 0 : Math.min(999, Math.max(0, val))
                   );
                 }}
               />
@@ -179,10 +179,12 @@ export function PaymentBreakdown({
                 min={0}
                 max={999}
                 inputMode="numeric"
-                value={bcaCount.toString()}
+                value={bcaCount === 0 ? "0" : bcaCount.toString()}
                 onChange={(e) => {
                   const val = Number.parseInt(e.target.value, 10);
-                  onChangeBcaCount(Number.isNaN(val) ? 0 : Math.max(0, val));
+                  onChangeBcaCount(
+                    Number.isNaN(val) ? 0 : Math.min(999, Math.max(0, val))
+                  );
                 }}
               />
             </div>

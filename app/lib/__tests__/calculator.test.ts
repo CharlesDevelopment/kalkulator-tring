@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   calculatePaymentVaBonus,
   calculateTringCuan,
+  MAX_NOMINAL_PURCHASE,
+  MAX_TRANSACTIONS_COUNT,
 } from "../calculator";
+import { parseDigitsToNumber } from "../format";
 
 describe("calculatePaymentVaBonus", () => {
   it("calculates initial service fee (2500/tx) and Bank Digital savings accurately", () => {
@@ -124,5 +127,32 @@ describe("calculateTringCuan", () => {
 
     expect(viaConventional.tagihanAwalVa).toBe(27500);
     expect(viaConventional.netModal).toBe(27500);
+  });
+
+  it("safely handles and limits extreme inputs with infinite zeroes without breaking", () => {
+    // Tests parseDigitsToNumber with 30 zeroes or huge numbers
+    expect(parseDigitsToNumber("0000000000000000000000")).toBe(0);
+    expect(parseDigitsToNumber("35169505985153106000000000000000000000")).toBe(
+      MAX_NOMINAL_PURCHASE
+    );
+
+    // Tests calculateTringCuan clamping
+    const result = calculateTringCuan({
+      inputMode: "rupiah",
+      nominalInput: 999999999999999,
+      gramInput: 0,
+      voucherDiscount: 999999999999999,
+      voucherCoversServiceFee: true,
+      buyPricePerGram: 2400000,
+      buybackPricePerGram: 2300000,
+      paymentRows: [{ id: "1", method: "VA_DIGITAL", frequency: 99999999 }],
+    });
+
+    expect(result.modalBeliPerTx).toBeLessThanOrEqual(MAX_NOMINAL_PURCHASE);
+    expect(result.vaBonusSummary.totalTransactions).toBeLessThanOrEqual(
+      MAX_TRANSACTIONS_COUNT
+    );
+    expect(Number.isFinite(result.netProfit)).toBe(true);
+    expect(Number.isFinite(result.buybackValue)).toBe(true);
   });
 });

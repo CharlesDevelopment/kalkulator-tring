@@ -143,6 +143,7 @@ export function CalculatorForm({
                   id="purchase-primary-input"
                   type="text"
                   inputMode="numeric"
+                  maxLength={14}
                   className="pl-10 text-lg font-bold"
                   placeholder="0"
                   value={formatThousandSeparator(nominalInput)}
@@ -180,11 +181,26 @@ export function CalculatorForm({
                   type="number"
                   step="0.01"
                   min="0"
+                  max="10000"
+                  maxLength={7}
                   inputMode="decimal"
                   className="pr-16 text-lg font-bold"
                   placeholder="0"
                   value={gramInput === "0" ? "" : gramInput}
-                  onChange={(e) => onChangeGram(e.target.value)}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (!raw || raw === "0") {
+                      onChangeGram("0");
+                      return;
+                    }
+                    const clean = raw.slice(0, 7);
+                    const num = Number.parseFloat(clean.replace(",", "."));
+                    if (Number.isFinite(num) && num > 10000) {
+                      onChangeGram("10000");
+                    } else {
+                      onChangeGram(clean);
+                    }
+                  }}
                 />
                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 font-mono text-sm font-bold text-muted">
                   gram
@@ -239,6 +255,7 @@ export function CalculatorForm({
                 id="voucher-discount-input"
                 type="text"
                 inputMode="numeric"
+                maxLength={14}
                 className="pl-10 text-lg font-bold"
                 placeholder="0"
                 value={formatThousandSeparator(voucherDiscount)}

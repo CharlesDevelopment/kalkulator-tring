@@ -53,12 +53,12 @@ export function PriceCard({
   const subBuyback = isPer001 ? buybackPrice : Math.round(buybackPrice / 100);
 
   const handleLocalBuyChange = (rawDigits: number) => {
-    const nextPerGram = isPer001 ? rawDigits * 100 : rawDigits;
+    const nextPerGram = Math.min(100_000_000, isPer001 ? rawDigits * 100 : rawDigits);
     onSaveLocalPrice(nextPerGram, buybackPrice);
   };
 
   const handleLocalBuybackChange = (rawDigits: number) => {
-    const nextPerGram = isPer001 ? rawDigits * 100 : rawDigits;
+    const nextPerGram = Math.min(100_000_000, isPer001 ? rawDigits * 100 : rawDigits);
     onSaveLocalPrice(buyPrice, nextPerGram);
   };
 
@@ -228,6 +228,7 @@ export function PriceCard({
                     id="local-buy-price"
                     type="text"
                     inputMode="numeric"
+                    maxLength={12}
                     className="pl-10"
                     placeholder={isPer001 ? "Contoh: 20.000" : "Contoh: 2.000.000"}
                     value={formatThousandSeparator(displayBuy)}
@@ -250,6 +251,7 @@ export function PriceCard({
                     id="local-buyback-price"
                     type="text"
                     inputMode="numeric"
+                    maxLength={12}
                     className="pl-10"
                     placeholder={isPer001 ? "Contoh: 19.300" : "Contoh: 1.930.000"}
                     value={formatThousandSeparator(displayBuyback)}

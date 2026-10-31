@@ -98,14 +98,14 @@ export default function SettingsPage() {
     : buybackPricePerGram;
 
   const handleBuyInputChange = (rawDigits: number) => {
-    const nextPerGram = isPer001 ? rawDigits * 100 : rawDigits;
+    const nextPerGram = Math.min(100_000_000, isPer001 ? rawDigits * 100 : rawDigits);
     setBuyPricePerGram(nextPerGram);
     setSavedNotice(false);
     setErrorMessage(null);
   };
 
   const handleBuybackInputChange = (rawDigits: number) => {
-    const nextPerGram = isPer001 ? rawDigits * 100 : rawDigits;
+    const nextPerGram = Math.min(100_000_000, isPer001 ? rawDigits * 100 : rawDigits);
     setBuybackPricePerGram(nextPerGram);
     setSavedNotice(false);
     setErrorMessage(null);
@@ -315,6 +315,7 @@ export default function SettingsPage() {
                       id="settings-buy-price"
                       type="text"
                       inputMode="numeric"
+                      maxLength={12}
                       className="pl-10 text-lg font-bold"
                       placeholder={
                         isPer001 ? "Contoh: 20.000" : "Contoh: 2.000.000"
@@ -344,6 +345,7 @@ export default function SettingsPage() {
                       id="settings-buyback-price"
                       type="text"
                       inputMode="numeric"
+                      maxLength={12}
                       className="pl-10 text-lg font-bold"
                       placeholder={
                         isPer001 ? "Contoh: 19.300" : "Contoh: 1.930.000"
